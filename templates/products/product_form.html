@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/quick_add_modal.html" %}
+<div class="max-w-4xl mx-auto animate-fadeIn">
+
+    {% if form.errors %}
+    <div class="mb-6 rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-red-50/50 overflow-hidden" id="form-errors-banner">
+        <div class="px-5 py-4 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-bold text-red-800 text-base">
+                    Please fix {{ form.errors|length }} error{{ form.errors|length|pluralize }} — براہ کرم {{ form.errors|length }} غلطیاں درست کریں
+                </h3>
+                <ul class="mt-2 space-y-1">
+                    {% for field_name, errors in form.errors.items %}
+                    <li class="flex items-center gap-2 text-sm text-red-700">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        <span><strong>{{ form.fields|get_label:field_name }}:</strong> {% for e in errors %}{{ e }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded',function(){var e=document.querySelector('.border-red-400');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.focus();}});</script>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Section 1: Basic Info -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm shadow-gray-100 overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
+                    Basic Information <span class="text-gray-400 text-sm font-normal">— بنیادی معلومات</span>
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {% render_field form.name %}
+                {% render_field form.name_urdu %}
+                {% render_field form.code %}
+                <!-- Category with + button -->
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Category <span style="color:#6b7280;font-size:11px;">(زمرہ)</span> <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <div style="flex:1;">{{ form.category }}</div>
+                        <button type="button"
+                                onclick="openGenericQuickAdd('Add Category — زمرہ شامل کریں', '/products/api/category-quick-add/', 'id_category')"
+                                style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                                title="Add Category — زمرہ شامل کریں">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Unit with + button -->
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Unit of Measurement <span style="color:#6b7280;font-size:11px;">(اکائی)</span> <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <div style="flex:1;">{{ form.unit }}</div>
+                        <a href="{% url 'products:unit_create' %}" target="_blank"
+                           style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;"
+                           title="Add Unit — اکائی شامل کریں">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </a>
+                    </div>
+                    <p style="margin-top:4px;font-size:11px;color:#9ca3af;">e.g. Maund (40 KG), Bag, Bale — من، بوری، گٹھا</p>
+                </div>
+                {% render_field form.source %}
+                {% render_field form.status %}
+                {% render_field form.hsn_code %}
+            </div>
+        </div>
+
+        <!-- Section 2: Pricing -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm shadow-gray-100 overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
+                    Pricing & Stock <span class="text-gray-400 text-sm font-normal">— قیمت اور اسٹاک</span>
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {% render_field form.default_purchase_price %}
+                {% render_field form.default_sale_price %}
+                {% render_field form.minimum_stock %}
+            </div>
+        </div>
+
+        <!-- Section 3: Quality -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm shadow-gray-100 overflow-hidden mb-5"
+             x-data="{ open: false }">
+            <button type="button" @click="open = !open"
+                    class="w-full px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">3</span>
+                    Cotton Quality <span class="text-gray-400 text-sm font-normal">— روئی کوالٹی (اختیاری)</span>
+                </h3>
+                <svg :class="open && 'rotate-180'" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="open" x-transition class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5" style="display:none;">
+                {% render_field form.default_moisture_pct %}
+                {% render_field form.default_trash_pct %}
+                {% render_field form.acceptable_loss_pct %}
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm shadow-gray-100 overflow-hidden mb-5">
+            <div class="p-6">
+                {% render_field form.description "full" %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between">
+            <a href="{% url 'products:product_list' %}"
+               class="px-5 py-3 text-sm font-semibold text-gray-600 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">← Cancel</a>
+            <button type="submit"
+                    class="px-8 py-3 text-sm font-bold text-white rounded-xl transition-all duration-200
+                           bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600
+                           shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40
+                           active:scale-[0.98] flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {% if product %}Update — اپ ڈیٹ{% else %}Create — بنائیں{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

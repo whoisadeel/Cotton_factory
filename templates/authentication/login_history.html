@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Login History — لاگ ان ہسٹری{% endblock %}
+{% block page_title %}Login History — لاگ ان ہسٹری{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <a href="{% url 'authentication:audit_log' %}" style="padding:8px 16px;background:white;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;">
+            ← Audit Log — سرگرمی ریکارڈ
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Total Logins — کل لاگ ان</div>
+            <div style="font-size:28px;font-weight:800;color:#1e293b;margin-top:4px;">{{ total }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Successful — کامیاب</div>
+            <div style="font-size:28px;font-weight:800;color:#059669;margin-top:4px;">{{ successful }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Failed — ناکام</div>
+            <div style="font-size:28px;font-weight:800;color:#dc2626;margin-top:4px;">{{ failed }}</div>
+        </div>
+        <div style="background:{% if recent_failed > 5 %}#fef2f2{% else %}white{% endif %};border:1px solid {% if recent_failed > 5 %}#fecaca{% else %}#e5e7eb{% endif %};border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Failed (7 days) — ناکام (ہفتہ)</div>
+            <div style="font-size:28px;font-weight:800;color:{% if recent_failed > 5 %}#dc2626{% else %}#6b7280{% endif %};margin-top:4px;">{{ recent_failed }}</div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div style="display:flex;gap:8px;">
+        <a href="{% url 'authentication:login_history' %}" style="padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;
+            {% if not selected_status %}background:#059669;color:white;{% else %}background:white;color:#374151;border:1px solid #e5e7eb;{% endif %}">
+            All — تمام
+        </a>
+        <a href="{% url 'authentication:login_history' %}?status=success" style="padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;
+            {% if selected_status == 'success' %}background:#059669;color:white;{% else %}background:white;color:#374151;border:1px solid #e5e7eb;{% endif %}">
+            ✓ Successful — کامیاب
+        </a>
+        <a href="{% url 'authentication:login_history' %}?status=failed" style="padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;
+            {% if selected_status == 'failed' %}background:#dc2626;color:white;{% else %}background:white;color:#374151;border:1px solid #e5e7eb;{% endif %}">
+            ✗ Failed — ناکام
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;">Date & Time — تاریخ و وقت</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;">Username — صارف</th>
+                    <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;">Status — حالت</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;">IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr style="border-bottom:1px solid #f3f4f6;{% if not a.was_successful %}background:#fef2f2;{% endif %}">
+                    <td style="padding:10px 14px;">
+                        <div style="font-weight:600;color:#1e293b;">{{ a.attempted_at|date:"d/m/Y" }}</div>
+                        <div style="font-size:11px;color:#9ca3af;">{{ a.attempted_at|time:"h:i:s A" }}</div>
+                    </td>
+                    <td style="padding:10px 14px;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+                                {% if a.was_successful %}background:#dcfce7;color:#166534;{% else %}background:#fee2e2;color:#991b1b;{% endif %}">
+                                {{ a.username|make_list|first|upper }}
+                            </div>
+                            <span style="font-weight:600;font-size:14px;">{{ a.username }}</span>
+                        </div>
+                    </td>
+                    <td style="padding:10px 14px;text-align:center;">
+                        {% if a.was_successful %}
+                        <span style="padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600;background:#dcfce7;color:#166534;">
+                            ✓ Success — کامیاب
+                        </span>
+                        {% else %}
+                        <span style="padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600;background:#fee2e2;color:#991b1b;">
+                            ✗ Failed — ناکام
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding:10px 14px;font-family:monospace;font-size:12px;color:#6b7280;">{{ a.ip_address }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding:48px;text-align:center;color:#9ca3af;">
+                        <div style="font-size:32px;margin-bottom:8px;">🔐</div>
+                        No login attempts recorded — کوئی لاگ ان ریکارڈ نہیں
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:center;gap:4px;padding:16px;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}"
+           style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;text-decoration:none;color:#374151;">← Prev</a>
+        {% endif %}
+        <span style="padding:8px 14px;font-size:13px;color:#6b7280;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}"
+           style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;text-decoration:none;color:#374151;">Next →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Expense Analysis — اخراجات کا تجزیہ{% endblock %}
+{% block page_title %}Expense Analysis — اخراجات کا تجزیہ{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<!-- Total Card -->
+<div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border-radius:16px;padding:20px;margin-bottom:16px;">
+    <div style="font-size:13px;opacity:0.8;">Total Expenses — کل اخراجات</div>
+    <div style="font-size:32px;font-weight:900;margin-top:4px;">₨ {{ total_expenses|floatformat:0|intcomma }}</div>
+</div>
+
+<!-- Category Breakdown -->
+<div class="bg-white rounded-2xl border shadow-sm p-6 mb-5">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Category Breakdown — زمرہ وار تفصیل</h2>
+    <div class="space-y-3">
+        {% for c in categories %}
+        <div class="flex items-center gap-4">
+            <div class="w-32 text-sm font-medium text-gray-700 truncate">{{ c.label }}</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-end px-2"
+                     style="width: {{ c.pct }}%; min-width: 40px;">
+                    <span class="text-white text-xs font-bold">{{ c.pct|floatformat:0 }}%</span>
+                </div>
+            </div>
+            <div class="w-28 text-right text-sm font-bold text-gray-800">₨ {{ c.total|floatformat:0|intcomma }}</div>
+            <div class="w-12 text-right text-xs text-gray-400">×{{ c.count }}</div>
+        </div>
+        {% empty %}
+        <p class="text-gray-400 text-center py-8">No expenses in this period — اس عرصے میں کوئی اخراجات نہیں</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Daily Trend -->
+<div class="bg-white rounded-2xl border shadow-sm p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Daily Trend — روزانہ رجحان</h2>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="bg-gray-50"><th class="px-4 py-3 text-left">Date — تاریخ</th><th class="px-4 py-3 text-right">Amount — رقم</th></tr></thead>
+            <tbody>
+                {% for d in daily %}<tr class="border-b border-gray-50 hover:bg-gray-50"><td class="px-4 py-3">{{ d.date|date:"d M Y, D" }}</td><td class="px-4 py-3 text-right font-bold">₨ {{ d.total|floatformat:0|intcomma }}</td></tr>
+                {% empty %}<tr><td colspan="2" class="px-4 py-8 text-center text-gray-400">No data</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

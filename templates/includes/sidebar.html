@@ -1,0 +1,119 @@
+<aside class="site-sidebar">
+
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">
+            <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <span class="sidebar-logo-text">Cotton Factory</span>
+    </div>
+
+    <nav class="sidebar-nav">
+{% with p=request.path %}
+
+        <a href="{% url 'dashboard:index' %}" class="{% if p == '/dashboard/' %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"/></svg>
+            Dashboard <span class="nav-ur">ڈیش بورڈ</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">Transactions — لین دین</div>
+
+        <a href="{% url 'purchases:purchase_list' %}" class="{% if '/purchases/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            Purchases <span class="nav-ur">خریداری</span>
+        </a>
+        <a href="{% url 'sales:sale_list' %}" class="{% if '/sales/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Sales <span class="nav-ur">فروخت</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">Finance — مالیات</div>
+
+        <a href="{% url 'finance:transaction_history' %}" class="{% if '/finance/transactions' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            Transactions <span class="nav-ur">لین دین</span>
+        </a>
+        <a href="{% url 'finance:payment_list' %}" class="{% if '/finance/payments' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Payments <span class="nav-ur">ادائیگی</span>
+        </a>
+        <a href="{% url 'finance:receipt_list' %}" class="{% if '/finance/receipts' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1"/></svg>
+            Receipts <span class="nav-ur">وصولی</span>
+        </a>
+        <a href="{% url 'finance:expense_list' %}" class="{% if '/finance/expenses' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+            Expenses <span class="nav-ur">اخراجات</span>
+        </a>
+        <a href="{% url 'finance:cheque_list' %}" class="{% if '/finance/cheques' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Cheques <span class="nav-ur">چیک</span>
+        </a>
+        <a href="{% url 'finance:adjustment_list' %}" class="{% if '/finance/adjustments' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            Cross-Party <span class="nav-ur">کراس پارٹی</span>
+        </a>
+        <a href="{% url 'finance:bank_account_list' %}" class="{% if '/finance/bank' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Bank <span class="nav-ur">بینک</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">Factory — فیکٹری</div>
+
+        <a href="{% url 'ginning:lot_list' %}" class="{% if '/ginning/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Ginning <span class="nav-ur">جننگ</span>
+        </a>
+        <a href="{% url 'labour:worker_list' %}" class="{% if '/labour/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Labour <span class="nav-ur">مزدور</span>
+        </a>
+        <a href="{% url 'transport:vehicle_list' %}" class="{% if '/transport/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12l-2 13H6L4 7h4zm0 0V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            Transport <span class="nav-ur">ٹرانسپورٹ</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">Data — ڈیٹا</div>
+
+        <a href="{% url 'inventory:stock_overview' %}" class="{% if '/inventory/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Stock <span class="nav-ur">اسٹاک</span>
+        </a>
+        <a href="{% url 'products:product_list' %}" class="{% if '/products/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Products <span class="nav-ur">مصنوعات</span>
+        </a>
+        <a href="{% url 'parties:party_list' %}" class="{% if '/parties/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            Parties <span class="nav-ur">پارٹیاں</span>
+        </a>
+        <a href="{% url 'accounting:chart' %}" class="{% if '/accounting/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Accounts <span class="nav-ur">اکاؤنٹس</span>
+        </a>
+        <a href="{% url 'reports:index' %}" class="{% if '/reports/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Reports <span class="nav-ur">رپورٹس</span>
+        </a>
+
+        <div class="nav-divider"></div>
+
+        <a href="{% url 'authentication:audit_log' %}" class="{% if '/auth/audit' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            History <span class="nav-ur">تاریخ</span>
+        </a>
+        <a href="{% url 'settings_app:index' %}" class="{% if '/settings/' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            Settings <span class="nav-ur">ترتیبات</span>
+        </a>
+        <a href="{% url 'settings_app:backup' %}" class="{% if '/settings/backup' in p %}active{% endif %}">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Backup <span class="nav-ur">بیک اپ</span>
+        </a>
+
+{% endwith %}
+    </nav>
+</aside>

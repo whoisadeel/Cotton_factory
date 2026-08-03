@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Sales Register{% endblock %}
+{% block page_title %}Sales Register — فروخت رجسٹر{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:12px 16px;margin-bottom:12px;">
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:8px;align-items:end;">
+        <input type="hidden" name="from" value="{{ filter_from|date:'Y-m-d' }}">
+        <input type="hidden" name="to" value="{{ filter_to|date:'Y-m-d' }}">
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#6b7280;margin-bottom:2px;">Customer — گاہک</label>
+            <select name="customer" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:white;">
+                <option value="">All — سب</option>
+                {% for cust in customers %}<option value="{{ cust.pk }}" {% if selected_customer == cust.pk|stringformat:"d" %}selected{% endif %}>{{ cust.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#6b7280;margin-bottom:2px;">Category — زمرہ</label>
+            <select name="category" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:white;">
+                <option value="">All — سب</option>
+                {% for cat in categories %}<option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"d" %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#6b7280;margin-bottom:2px;">Product — پروڈکٹ</label>
+            <select name="product" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:white;">
+                <option value="">All — سب</option>
+                {% for p in products_list %}<option value="{{ p.pk }}" {% if selected_product == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <button type="submit" style="padding:6px 14px;background:#059669;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Filter — فلٹر</button>
+        {% if selected_customer or selected_category or selected_product %}
+        <a href="?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}" style="padding:6px 14px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">Clear Filters</a>
+        {% endif %}
+    </form>
+</div>
+
+<div x-data="saleCalc()" x-init="init()">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Selected — منتخب</div>
+            <div style="font-size:20px;font-weight:800;color:#2563eb;" x-text="sel.length + ' / ' + rows.length"></div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Total — کل رقم</div>
+            <div style="font-size:20px;font-weight:800;color:#059669;" x-text="'₨ ' + fmt(selTotal)"></div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Balance Due — بقایا</div>
+            <div style="font-size:20px;font-weight:800;color:#dc2626;" x-text="'₨ ' + fmt(selBalance)"></div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button @click="rows.forEach(r=>r.on=true)" type="button" style="padding:5px 12px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">✓ Select All</button>
+        <button @click="rows.forEach(r=>r.on=false)" type="button" style="padding:5px 12px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">✗ Clear</button>
+        <a href="{% url 'reports:export_csv' 'sales' %}?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}" style="padding:5px 12px;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;">Export CSV</a>
+    </div>
+
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                <tr>
+                    <th style="padding:10px 8px;width:35px;">✓</th>
+                    <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Date</th>
+                    <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Invoice</th>
+                    <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Customer — گاہک</th>
+                    <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Items — اشیاء</th>
+                    <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Total</th>
+                    <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#059669;">Received</th>
+                    <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#dc2626;">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="(r,i) in rows" :key="r.id">
+                    <tr @click="r.on=!r.on" style="cursor:pointer;border-bottom:1px solid #f3f4f6;"
+                        :style="r.on?'':'opacity:0.4;background:#fafafa;'">
+                        <td style="padding:8px;text-align:center;"><input type="checkbox" :checked="r.on" @click.stop="r.on=!r.on" style="width:16px;height:16px;accent-color:#059669;cursor:pointer;"></td>
+                        <td style="padding:8px;" x-text="r.date"></td>
+                        <td style="padding:8px;font-family:monospace;font-size:11px;" x-text="r.number"></td>
+                        <td style="padding:8px;font-weight:600;" x-text="r.customer"></td>
+                        <td style="padding:8px;font-size:11px;color:#6b7280;" x-text="r.items"></td>
+                        <td style="padding:8px;text-align:right;font-weight:700;" x-text="'₨'+fmt(r.total)"></td>
+                        <td style="padding:8px;text-align:right;color:#059669;" x-text="'₨'+fmt(r.received)"></td>
+                        <td style="padding:8px;text-align:right;color:#dc2626;" x-text="'₨'+fmt(r.balance)"></td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot x-show="sel.length>0" :style="sel.length>0 ? 'background:#f0fdf4;border-top:2px solid #059669;' : 'display:none;'" style="display:none;">
+                <tr style="font-weight:700;">
+                    <td colspan="5" style="padding:10px;text-align:right;">Selected Totals:</td>
+                    <td style="padding:10px;text-align:right;" x-text="'₨'+fmt(selTotal)"></td>
+                    <td style="padding:10px;text-align:right;color:#059669;" x-text="'₨'+fmt(selReceived)"></td>
+                    <td style="padding:10px;text-align:right;color:#dc2626;" x-text="'₨'+fmt(selBalance)"></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div x-show="rows.length===0" style="display:none;padding:30px;text-align:center;color:#9ca3af;" :style="rows.length===0 ? 'display:block;padding:30px;text-align:center;color:#9ca3af;' : 'display:none;'">No sales in this period</div>
+    </div>
+</div>
+
+<script>
+function saleCalc(){return{
+    rows:[],
+    init(){this.rows={{ sales_json|safe }}.map(r=>({...r,on:true}))},
+    get sel(){return this.rows.filter(r=>r.on)},
+    get selTotal(){return this.sel.reduce((s,r)=>s+r.total,0)},
+    get selReceived(){return this.sel.reduce((s,r)=>s+r.received,0)},
+    get selBalance(){return this.sel.reduce((s,r)=>s+r.balance,0)},
+    fmt(n){return Math.round(n).toLocaleString()},
+}}
+</script>
+{% endblock %}

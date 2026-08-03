@@ -1,0 +1,132 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;width:100%;box-sizing:border-box;">
+<div style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+    <a href="{% url 'finance:bank_account_list' %}" style="color:#059669;text-decoration:none;font-weight:600;">← Bank Accounts — بینک اکاؤنٹس</a>
+</div>
+
+<!-- Step 1: Select Bank -->
+{% if not selected_bank %}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+    <h3 class="font-bold text-gray-800 mb-4">Step 1: Select Bank Account — بینک اکاؤنٹ منتخب کریں</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for bank in bank_accounts %}
+        <a href="?bank={{ bank.pk }}" class="p-4 border-2 border-gray-200 rounded-xl hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+            <p class="font-bold">{{ bank.bank_name }}</p>
+            <p class="text-sm text-gray-500">{{ bank.account_number }}</p>
+            <p class="text-lg font-bold text-emerald-600 mt-1">₨ {{ bank.current_balance|floatformat:0|intcomma }}</p>
+        </a>
+        {% empty %}
+        <p class="text-gray-400">No bank accounts. <a href="{% url 'finance:bank_account_create' %}" class="text-emerald-600 underline">Add one</a></p>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<!-- Step 2: Reconcile -->
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="bank_account" value="{{ selected_bank.pk }}">
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-4">
+        <h3 class="font-bold text-gray-800 mb-4">
+            Reconciling: {{ selected_bank.bank_name }} — {{ selected_bank.account_number }}
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="form-label" style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">Date</label>
+                <input type="date" name="date" value="{% now 'Y-m-d' %}" required
+                       style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+            </div>
+            <div>
+                <label class="form-label" style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">Bank Statement Balance (₨)</label>
+                <input type="number" name="statement_balance" step="0.01" required placeholder="Enter balance from bank statement"
+                       style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:18px;font-weight:700;text-align:center;outline:none;">
+            </div>
+            <div>
+                <label class="form-label" style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">System Balance</label>
+                <div style="padding:12px;background:#f0fdf4;border-radius:12px;text-align:center;font-size:18px;font-weight:700;color:#059669;">
+                    ₨ {{ sys_balance|floatformat:0|intcomma }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments (Money Out) -->
+    {% if payments %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-4">
+        <h3 class="font-bold text-gray-800 mb-3">Bank Payments — بینک ادائیگیاں</h3>
+        <p class="text-sm text-gray-500 mb-3">Check the transactions that appear on your bank statement — اپنے بینک اسٹیٹمنٹ سے ملائیں</p>
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead class="bg-gray-50"><tr>
+                <th class="px-3 py-2 text-center w-12">Match</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Date</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Voucher</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Party</th>
+                <th class="px-3 py-2 text-right text-xs text-gray-500">Amount</th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-100">
+            {% for p in payments %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-3 py-2 text-center">
+                    <input type="checkbox" name="match_pay_{{ p.pk }}" checked
+                           style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">
+                </td>
+                <td class="px-3 py-2">{{ p.date|date:"d/m/Y" }}</td>
+                <td class="px-3 py-2 font-mono text-gray-500">{{ p.voucher_number }}</td>
+                <td class="px-3 py-2 font-medium">{{ p.party.name }}</td>
+                <td class="px-3 py-2 text-right font-bold text-red-600">₨ {{ p.amount|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+    {% endif %}
+
+    <!-- Receipts (Money In) -->
+    {% if receipts %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-4">
+        <h3 class="font-bold text-gray-800 mb-3">Bank Receipts — بینک وصولیاں</h3>
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead class="bg-gray-50"><tr>
+                <th class="px-3 py-2 text-center w-12">Match</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Date</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Voucher</th>
+                <th class="px-3 py-2 text-left text-xs text-gray-500">Party</th>
+                <th class="px-3 py-2 text-right text-xs text-gray-500">Amount</th>
+            </tr></thead>
+            <tbody class="divide-y divide-gray-100">
+            {% for r in receipts %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-3 py-2 text-center">
+                    <input type="checkbox" name="match_rcv_{{ r.pk }}" checked
+                           style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">
+                </td>
+                <td class="px-3 py-2">{{ r.date|date:"d/m/Y" }}</td>
+                <td class="px-3 py-2 font-mono text-gray-500">{{ r.voucher_number }}</td>
+                <td class="px-3 py-2 font-medium">{{ r.party.name }}</td>
+                <td class="px-3 py-2 text-right font-bold text-emerald-600">₨ {{ r.amount|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-4">
+        <label class="form-label" style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">Notes</label>
+        <textarea name="notes" rows="2" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;"></textarea>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;">
+        <button type="submit" style="padding:12px 32px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+            Save Reconciliation — مطابقت محفوظ کریں
+        </button>
+    </div>
+</form>
+{% endif %}
+
+</div>
+{% endblock %}

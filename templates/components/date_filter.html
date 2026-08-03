@@ -1,0 +1,44 @@
+{# Date range filter with quick presets — uses server-side date_presets context processor #}
+{# Variables available: today_iso, week_start, month_start, year_start, fy_start #}
+{# Required context from view: filter_from, filter_to. Optional: show_status #}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px;">
+    <form method="get" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;">
+        <!-- Quick preset buttons -->
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <a href="?from={{ today_iso }}&to={{ today_iso }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == today_iso and request.GET.to == today_iso %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == today_iso and request.GET.to == today_iso %}#d1fae5{% else %}white{% endif %};">
+                Today — آج</a>
+            <a href="?from={{ week_start }}&to={{ today_iso }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == week_start %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == week_start %}#d1fae5{% else %}white{% endif %};">
+                This Week — ہفتہ</a>
+            <a href="?from={{ month_start }}&to={{ today_iso }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == month_start %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == month_start %}#d1fae5{% else %}white{% endif %};">
+                This Month — مہینہ</a>
+            <a href="?from={{ fy_start }}&to={{ today_iso }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == fy_start %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == fy_start %}#d1fae5{% else %}white{% endif %};">
+                This FY — مالی سال</a>
+            <a href="?from={{ year_start }}&to={{ today_iso }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == year_start %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == year_start %}#d1fae5{% else %}white{% endif %};">
+                This Year — سال</a>
+        </div>
+        <!-- Custom date range -->
+        <div style="display:flex;align-items:center;gap:6px;">
+            <label style="font-size:12px;color:#6b7280;">From:</label>
+            <input type="date" name="from" value="{{ filter_from|date:'Y-m-d' }}"
+                   style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+            <label style="font-size:12px;color:#6b7280;">To:</label>
+            <input type="date" name="to" value="{{ filter_to|date:'Y-m-d' }}"
+                   style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+        </div>
+        {% if show_status %}
+        <select name="status" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:white;">
+            <option value="">All Status</option>
+            <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+            <option value="final" {% if request.GET.status == 'final' %}selected{% endif %}>Final</option>
+        </select>
+        {% endif %}
+        <button type="submit" style="padding:6px 16px;background:#059669;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+            Filter — فلٹر
+        </button>
+    </form>
+</div>

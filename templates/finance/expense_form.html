@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fadeIn" style="max-width:600px;margin:0 auto;"
+     x-data="{ method: '{{ form.payment_method.value|default:'cash' }}' }">
+
+    {% if form.errors %}
+    <div style="margin-bottom:20px;border:2px solid #fecaca;background:#fef2f2;padding:16px;border-radius:16px;">
+        <h3 style="font-weight:700;color:#991b1b;margin-bottom:6px;">Please fix errors — غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p style="color:#b91c1c;font-size:13px;">• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Expense Details — خرچے کی تفصیل
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>{% render_field form.date %}</div>
+                <div>{% render_field form.category %}</div>
+            </div>
+            <div style="padding:0 20px 20px;">
+                <label style="display:block;font-size:14px;font-weight:700;text-align:center;margin-bottom:6px;">Amount — رقم</label>
+                {{ form.amount }}
+            </div>
+        </div>
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>{% render_field form.paid_to %}</div>
+                <div>
+                    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;">Method — طریقہ</label>
+                    <select name="payment_method" x-model="method"
+                            style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="cash" {% if form.payment_method.value == 'cash' %}selected{% endif %}>Cash — نقد 💵</option>
+                        <option value="bank" {% if form.payment_method.value == 'bank' %}selected{% endif %}>Bank — بینک 🏦</option>
+                        <option value="online" {% if form.payment_method.value == 'online' %}selected{% endif %}>Online — آن لائن 📱</option>
+                    </select>
+                </div>
+                <div style="grid-column:span 2;">{% render_field form.description %}</div>
+                <div style="grid-column:span 2;">{% render_field form.receipt_image %}</div>
+                <div style="grid-column:span 2;padding-top:8px;border-top:1px solid #f3f4f6;margin-top:8px;">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                        {{ form.is_recurring }}
+                        <span style="font-size:14px;font-weight:600;color:#374151;">
+                            🔄 Recurring Expense — بار بار آنے والا خرچہ
+                        </span>
+                    </label>
+                    <div x-show="$el.closest('div').querySelector('input[type=checkbox]')?.checked" x-transition
+                         style="display:none;margin-top:8px;margin-left:28px;">
+                        {% render_field form.recurrence %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;">
+            <a href="/finance/expenses/" style="padding:10px 20px;font-size:14px;font-weight:600;color:#4b5563;background:white;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;">← Back</a>
+            <button type="submit" style="padding:12px 28px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                Save Expense — خرچہ محفوظ
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

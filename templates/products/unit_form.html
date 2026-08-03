@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+    <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+        <a href="{% url 'products:unit_list' %}" style="color:#059669;text-decoration:none;font-weight:600;">← Units — اکائیاں</a>
+    </div>
+
+    {# ── Error Banner (inline to avoid include recursion) ── #}
+    {% if form.errors %}
+    <div class="mb-5 rounded-2xl border-2 border-red-200 bg-red-50 p-5" id="form-errors-banner">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+                <h3 class="font-bold text-red-800">
+                    Please fix {{ form.errors|length }} error{{ form.errors|length|pluralize }}
+                    <span class="text-red-500 font-normal text-sm">— براہ کرم غلطیاں درست کریں</span>
+                </h3>
+                <ul class="mt-1.5 space-y-0.5">
+                {% for field_name, errors in form.errors.items %}
+                    <li class="text-sm text-red-700 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
+                        <strong>{{ field_name }}:</strong>
+                        {% for e in errors %}{{ e }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded',function(){var e=document.querySelector('.border-red-400');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});}});</script>
+    {% endif %}
+
+    {% if not unit %}
+    <!-- Quick presets for cotton factory -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
+        <h3 class="font-bold text-gray-700 mb-3">Quick Add — فوری اضافہ</h3>
+        <p class="text-xs text-gray-400 mb-3">Common cotton factory units — عام اکائیاں (click to fill form — فارم بھرنے کیلئے دبائیں)</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button type="button" onclick="fillUnit('Maund','من','MND','weight',40)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Maund — من</div>
+                <div class="text-xs text-gray-400">1 من = 40 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Kilogram','کلوگرام','KG','weight',1)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Kilogram — کلوگرام</div>
+                <div class="text-xs text-gray-400">بنیادی اکائی (Base)</div>
+            </button>
+            <button type="button" onclick="fillUnit('Ton','ٹن','TON','weight',1000)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Ton — ٹن</div>
+                <div class="text-xs text-gray-400">1 ٹن = 1000 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Bale (Cotton Lint)','گانٹھ (روئی)','BALE','weight',170)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Bale — گانٹھ</div>
+                <div class="text-xs text-gray-400">1 گانٹھ = 170 KG (روئی)</div>
+            </button>
+            <button type="button" onclick="fillUnit('Bag (Seed)','بوری (بنولہ)','SEED-BAG','weight',37.324)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Bag Seed — بوری بنولہ</div>
+                <div class="text-xs text-gray-400">1 بوری = 37.324 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Bag (Khal/Cake)','بوری (کھل)','KHAL-BAG','weight',56)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Bag Khal — بوری کھل</div>
+                <div class="text-xs text-gray-400">1 بوری = 56 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Bag (Phutti)','بوری (پھٹی)','PHUTTI-BAG','weight',85)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Bag Phutti — بوری پھٹی</div>
+                <div class="text-xs text-gray-400">1 بوری = ~85 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Bag (General)','بوری','BAG','weight',100)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Bag — بوری</div>
+                <div class="text-xs text-gray-400">1 بوری = 100 KG</div>
+            </button>
+            <button type="button" onclick="fillUnit('Piece','عدد','PCS','quantity',1)" class="p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-left hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                <div class="font-bold text-gray-800">Piece — عدد</div>
+                <div class="text-xs text-gray-400">گنتی (Count)</div>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-2xl border border-gray-200 p-6">
+        <form method="post">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {# Name #}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Unit Name — اکائی کا نام <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<p class="mt-1 text-xs text-red-600">{{ form.name.errors.0 }}</p>{% endif %}
+                    <p class="mt-0.5 text-xs text-gray-400">e.g. Bag (Khal), Maund, Bale</p>
+                </div>
+                {# Urdu Name #}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Name (Urdu) — اردو نام
+                    </label>
+                    {{ form.name_urdu }}
+                    {% if form.name_urdu.errors %}<p class="mt-1 text-xs text-red-600">{{ form.name_urdu.errors.0 }}</p>{% endif %}
+                </div>
+                {# Abbreviation #}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Short Code — مختصر کوڈ <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.abbreviation }}
+                    {% if form.abbreviation.errors %}<p class="mt-1 text-xs text-red-600">{{ form.abbreviation.errors.0 }}</p>{% endif %}
+                    <p class="mt-0.5 text-xs text-gray-400">e.g. KG, MND, KHAL-BAG, BALE</p>
+                </div>
+                {# Type #}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Type — قسم <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.unit_type }}
+                    {% if form.unit_type.errors %}<p class="mt-1 text-xs text-red-600">{{ form.unit_type.errors.0 }}</p>{% endif %}
+                </div>
+                {# Conversion to KG — FULL WIDTH for emphasis #}
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        <span class="text-lg">⚖️</span> How many KG in 1 unit? — ایک اکائی میں کتنے کلوگرام <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.conversion_to_base }}
+                    {% if form.conversion_to_base.errors %}<p class="mt-1 text-xs text-red-600">{{ form.conversion_to_base.errors.0 }}</p>{% endif %}
+                    <div class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                        <strong>Examples — مثالیں:</strong><br>
+                        • Kilogram → <strong>1</strong> (base unit)<br>
+                        • Maund → <strong>40</strong> (1 من = 40 KG)<br>
+                        • Bag Khal → <strong>56</strong> (1 بوری کھل = 56 KG)<br>
+                        • Bag Phutti → <strong>85</strong> (1 بوری پھٹی = 85 KG)<br>
+                        • Bale → <strong>170</strong> (1 گانٹھ = 170 KG)<br>
+                        • Ton → <strong>1000</strong> (1 ٹن = 1000 KG)
+                    </div>
+                </div>
+                {# Active + Sort Order #}
+                <div class="flex items-center space-x-2 pb-1">
+                    {{ form.is_active }}
+                    <span class="text-sm text-gray-700">Active — فعال</span>
+                </div>
+            </div>
+            {# Hidden sort_order — auto defaults to 0 #}
+            <input type="hidden" name="sort_order" value="{{ form.sort_order.value|default:'0' }}">
+
+            <div class="mt-6 flex justify-between pt-4 border-t border-gray-100">
+                <a href="{% url 'products:unit_list' %}" class="px-4 py-2.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">
+                    Cancel — منسوخ
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl">
+                    {% if unit %}Update — اپ ڈیٹ{% else %}Create Unit — اکائی بنائیں{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function fillUnit(name, nameUr, abbr, type, conversion) {
+    document.querySelector('[name=name]').value = name;
+    document.querySelector('[name=name_urdu]').value = nameUr;
+    document.querySelector('[name=abbreviation]').value = abbr;
+    document.querySelector('[name=unit_type]').value = type;
+    document.querySelector('[name=conversion_to_base]').value = conversion;
+    // Scroll to form
+    document.querySelector('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+{% endblock %}

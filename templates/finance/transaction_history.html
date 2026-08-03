@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Transaction History{% endblock %}
+{% block page_title %}Transaction History — لین دین کی تاریخ{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/finance/payments/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Finance — مالیات</a></div>
+
+<!-- Filters -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px;">
+    <!-- Quick date presets -->
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
+        <a href="?from={{ today_iso }}&to={{ today_iso }}{% if selected_party %}&party={{ selected_party }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}"
+           style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid {% if request.GET.from == today_iso and request.GET.to == today_iso %}#059669{% else %}#e5e7eb{% endif %};text-decoration:none;color:#374151;background:{% if request.GET.from == today_iso and request.GET.to == today_iso %}#d1fae5{% else %}white{% endif %};">Today — آج</a>
+        <a href="?from={{ week_start }}&to={{ today_iso }}{% if selected_party %}&party={{ selected_party }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}"
+           style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Week — ہفتہ</a>
+        <a href="?from={{ month_start }}&to={{ today_iso }}{% if selected_party %}&party={{ selected_party }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}"
+           style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Month — مہینہ</a>
+        <a href="?from={{ fy_start }}&to={{ today_iso }}{% if selected_party %}&party={{ selected_party }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}"
+           style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This FY — مالی سال</a>
+        <a href="?from={{ year_start }}&to={{ today_iso }}{% if selected_party %}&party={{ selected_party }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}"
+           style="padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Year — سال</a>
+    </div>
+    <form method="get" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;">
+        <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:3px;">Party — پارٹی</label>
+            <select name="party" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:white;">
+                <option value="">All Parties — سب</option>
+                {% for p in parties %}
+                <option value="{{ p.pk }}" {% if selected_party == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:3px;">Type — قسم</label>
+            <select name="type" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:white;">
+                <option value="">All</option>
+                <option value="payment" {% if selected_type == 'payment' %}selected{% endif %}>Payments — ادائیگی</option>
+                <option value="receipt" {% if selected_type == 'receipt' %}selected{% endif %}>Receipts — وصولی</option>
+                <option value="expense" {% if selected_type == 'expense' %}selected{% endif %}>Expenses — اخراجات</option>
+
+
+            </select>
+        </div>
+        <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:3px;">Method</label>
+            <select name="method" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:white;">
+                <option value="">All</option>
+                <option value="cash" {% if selected_method == 'cash' %}selected{% endif %}>Cash — نقد</option>
+                <option value="bank" {% if selected_method == 'bank' %}selected{% endif %}>Bank</option>
+                <option value="cheque" {% if selected_method == 'cheque' %}selected{% endif %}>Cheque — چیک</option>
+                <option value="online" {% if selected_method == 'online' %}selected{% endif %}>Online</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+            <input type="date" name="from" value="{{ filter_from|date:'Y-m-d' }}" style="padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+            <span style="color:#9ca3af;">to</span>
+            <input type="date" name="to" value="{{ filter_to|date:'Y-m-d' }}" style="padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+        </div>
+        <button type="submit" style="padding:8px 16px;background:#059669;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Filter</button>
+    </form>
+</div>
+
+<!-- Party Balance Card (when filtered by party) -->
+{% if selected_party_obj %}
+<div style="background:white;border:2px solid {% if selected_party_obj.current_balance > 0 %}#059669{% elif selected_party_obj.current_balance < 0 %}#dc2626{% else %}#e5e7eb{% endif %};border-radius:16px;padding:16px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+            <div style="font-size:18px;font-weight:800;color:#1f2937;">{{ selected_party_obj.name }}</div>
+            <div style="font-size:12px;color:#6b7280;">{{ selected_party_obj.get_party_type_display }} — {{ selected_party_obj.code }}</div>
+        </div>
+        <div style="text-align:right;">
+            {% if selected_party_obj.current_balance > 0 %}
+                <div style="font-size:12px;color:#059669;font-weight:600;">Receivable — وصول شدنی</div>
+                <div style="font-size:28px;font-weight:900;color:#059669;">₨ {{ selected_party_obj.current_balance|floatformat:0|intcomma }}</div>
+            {% elif selected_party_obj.current_balance < 0 %}
+                <div style="font-size:12px;color:#dc2626;font-weight:600;">Payable — واجب الادا</div>
+                <div style="font-size:28px;font-weight:900;color:#dc2626;">₨ {{ selected_party_obj.current_balance|floatformat:0|intcomma }}</div>
+            {% else %}
+                <div style="font-size:12px;color:#6b7280;">Settled — برابر</div>
+                <div style="font-size:28px;font-weight:900;color:#6b7280;">₨ 0</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Summary Cards -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#166534;">Money In — وصولی</div>
+        <div style="font-size:22px;font-weight:800;color:#059669;">₨ {{ total_in|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#991b1b;">Money Out — ادائیگی</div>
+        <div style="font-size:22px;font-weight:800;color:#dc2626;">₨ {{ total_out|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:{% if net >= 0 %}#eff6ff{% else %}#fef3c7{% endif %};border:1px solid {% if net >= 0 %}#bfdbfe{% else %}#fde68a{% endif %};border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#6b7280;">Net — خالص</div>
+        <div style="font-size:22px;font-weight:800;color:{% if net >= 0 %}#2563eb{% else %}#d97706{% endif %};">₨ {{ net|floatformat:0|intcomma }}</div>
+    </div>
+</div>
+
+<!-- Outstanding Balances (when NOT filtered by specific party) -->
+{% if not selected_party_obj %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <!-- They owe us -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:#059669;">Receivables — وصولیاں</span>
+            <span style="font-size:16px;font-weight:800;color:#059669;">₨ {{ total_receivable|floatformat:0|intcomma }}</span>
+        </div>
+        {% for p in parties_owe_us %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f3f4f6;font-size:12px;">
+            <a href="?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}&party={{ p.pk }}" style="color:#374151;text-decoration:none;font-weight:500;">{{ p.name }}</a>
+            <span style="font-weight:700;color:#059669;">₨ {{ p.current_balance|floatformat:0|intcomma }}</span>
+        </div>
+        {% empty %}
+        <div style="font-size:12px;color:#9ca3af;text-align:center;padding:8px;">No one owes us — کوئی نہیں</div>
+        {% endfor %}
+    </div>
+    <!-- We owe them -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:#dc2626;">Payables — واجبات</span>
+            <span style="font-size:16px;font-weight:800;color:#dc2626;">₨ {{ total_payable|floatformat:0|intcomma }}</span>
+        </div>
+        {% for p in we_owe_parties %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f3f4f6;font-size:12px;">
+            <a href="?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}&party={{ p.pk }}" style="color:#374151;text-decoration:none;font-weight:500;">{{ p.name }}</a>
+            <span style="font-weight:700;color:#dc2626;">₨ {{ p.current_balance|floatformat:0|intcomma }}</span>
+        </div>
+        {% empty %}
+        <div style="font-size:12px;color:#9ca3af;text-align:center;padding:8px;">We owe no one — ہم کسی کو نہیں</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Transactions Table -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+    <div class="overflow-x-auto">
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                <tr>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Date</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Type — قسم</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Ref #</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Party — پارٹی</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Method</th>
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Narration</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#059669;">In ↓</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#dc2626;">Out ↑</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:8px 12px;white-space:nowrap;">{{ tx.date|date:"d/m/Y" }}</td>
+                    <td style="padding:8px 12px;">
+                        <span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;
+                            {% if tx.type_class == 'payment' %}background:#fef2f2;color:#dc2626;
+                            {% elif tx.type_class == 'receipt' %}background:#f0fdf4;color:#059669;
+                            {% elif tx.type_class == 'expense' %}background:#fffbeb;color:#92400e;
+                            {% elif tx.type_class == 'adjustment' %}background:#f5f3ff;color:#6d28d9;
+                            {% else %}background:#fef3c7;color:#92400e;{% endif %}">{{ tx.type }}</span>
+                    </td>
+                    <td style="padding:8px 12px;font-family:monospace;font-size:11px;">
+                        {% if tx.url %}<a href="{{ tx.url }}" style="color:#2563eb;">{{ tx.ref }}</a>{% else %}{{ tx.ref }}{% endif %}
+                    </td>
+                    <td style="padding:8px 12px;font-weight:600;">{{ tx.party }}</td>
+                    <td style="padding:8px 12px;font-size:12px;color:#6b7280;">{{ tx.method }}</td>
+                    <td style="padding:8px 12px;font-size:12px;color:#6b7280;">{{ tx.narration|truncatechars:40 }}</td>
+                    <td style="padding:8px 12px;text-align:right;font-weight:700;color:#059669;">
+                        {% if tx.direction == 'in' %}₨ {{ tx.amount|floatformat:0|intcomma }}{% endif %}
+                    </td>
+                    <td style="padding:8px 12px;text-align:right;font-weight:700;color:#dc2626;">
+                        {% if tx.direction == 'out' %}₨ {{ tx.amount|floatformat:0|intcomma }}{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="padding:30px;text-align:center;color:#9ca3af;">No transactions in this period — اس عرصے میں کوئی لین دین نہیں</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

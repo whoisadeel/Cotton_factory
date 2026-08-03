@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ bank.bank_name }} — Ledger{% endblock %}
+{% block page_title %}Bank Ledger — بینک کھاتہ{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:0 auto;width:100%;box-sizing:border-box;" class="space-y-4">
+
+    <div style="font-size:13px;color:#6b7280;">
+        <a href="{% url 'finance:bank_account_list' %}" style="color:#059669;text-decoration:none;">← Bank Accounts</a>
+        <span style="margin:0 6px;">›</span> {{ bank.bank_name }}
+    </div>
+
+    <!-- Bank Header -->
+    <div style="background:white;border:2px solid #dbeafe;border-radius:16px;padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+        <div>
+            <div style="font-size:18px;font-weight:800;color:#1e293b;">🏦 {{ bank.bank_name }}</div>
+            <div style="font-size:14px;color:#6b7280;font-family:monospace;">{{ bank.account_number }}</div>
+            {% if bank.branch %}<div style="font-size:12px;color:#9ca3af;">{{ bank.branch }}</div>{% endif %}
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#6b7280;">Current Balance</div>
+            <div style="font-size:26px;font-weight:900;{% if bank.current_balance >= 0 %}color:#059669;{% else %}color:#dc2626;{% endif %}">
+                ₨ {{ bank.current_balance|floatformat:0|intcomma }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    {% include "components/date_filter.html" %}
+
+    <!-- Summary -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Opening — افتتاحی</div>
+            <div style="font-size:18px;font-weight:800;color:#374151;">₨ {{ opening_balance|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#059669;font-weight:600;">Money In — آمد</div>
+            <div style="font-size:18px;font-weight:800;color:#059669;">₨ {{ total_in|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#dc2626;font-weight:600;">Money Out — خرچ</div>
+            <div style="font-size:18px;font-weight:800;color:#dc2626;">₨ {{ total_out|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:14px;text-align:center;color:white;">
+            <div style="font-size:11px;opacity:0.8;">Closing — اختتامی</div>
+            <div style="font-size:18px;font-weight:900;">₨ {{ closing_balance|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+
+    <!-- Ledger Table -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Date</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Ref #</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Party — پارٹی</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Narration</th>
+                    <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#059669;">Deposit — جمع</th>
+                    <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#dc2626;">Withdrawal — نکاسی</th>
+                    <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#1e40af;">Balance — بیلنس</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Opening row -->
+                <tr style="border-bottom:1px solid #e5e7eb;background:#f8fafc;">
+                    <td style="padding:8px 14px;font-weight:700;" colspan="6">Opening Balance — افتتاحی بیلنس</td>
+                    <td style="padding:8px 14px;text-align:right;font-weight:800;color:#1e40af;">₨ {{ opening_balance|floatformat:0|intcomma }}</td>
+                </tr>
+                {% for e in entries %}
+                <tr style="border-bottom:1px solid #f3f4f6;{% if e.url %}cursor:pointer;{% endif %}" {% if e.url %}onclick="window.location='{{ e.url }}'"{% endif %}>
+                    <td style="padding:8px 14px;">{{ e.date|date:"d/m/Y" }}</td>
+                    <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ e.ref }}</td>
+                    <td style="padding:8px 14px;font-weight:600;">{{ e.party }}</td>
+                    <td style="padding:8px 14px;color:#6b7280;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ e.narration|truncatechars:40 }}</td>
+                    <td style="padding:8px 14px;text-align:right;{% if e.debit %}font-weight:600;color:#059669;{% endif %}">{% if e.debit %}₨ {{ e.debit|floatformat:0|intcomma }}{% endif %}</td>
+                    <td style="padding:8px 14px;text-align:right;{% if e.credit %}font-weight:600;color:#dc2626;{% endif %}">{% if e.credit %}₨ {{ e.credit|floatformat:0|intcomma }}{% endif %}</td>
+                    <td style="padding:8px 14px;text-align:right;font-weight:700;color:#1e40af;">₨ {{ e.balance|floatformat:0|intcomma }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="padding:40px;text-align:center;color:#9ca3af;">
+                    No bank transactions in this period — اس مدت میں کوئی بینک لین دین نہیں
+                </td></tr>
+                {% endfor %}
+                <!-- Closing row -->
+                {% if entries %}
+                <tr style="border-top:2px solid #1e40af;background:#eff6ff;">
+                    <td style="padding:10px 14px;font-weight:800;color:#1e40af;" colspan="4">Closing Balance — اختتامی بیلنس</td>
+                    <td style="padding:10px 14px;text-align:right;font-weight:700;color:#059669;">₨ {{ total_in|floatformat:0|intcomma }}</td>
+                    <td style="padding:10px 14px;text-align:right;font-weight:700;color:#dc2626;">₨ {{ total_out|floatformat:0|intcomma }}</td>
+                    <td style="padding:10px 14px;text-align:right;font-weight:900;font-size:15px;color:#1e40af;">₨ {{ closing_balance|floatformat:0|intcomma }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

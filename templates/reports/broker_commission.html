@@ -1,0 +1,120 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Commission Report{% endblock %}
+{% block page_title %}Commission Report — کمیشن رپورٹ{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<!-- Summary -->
+{% if total_purchase_commission or total_sale_commission %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#c2410c;font-weight:600;">Purchase Commission — خریداری کمیشن</div>
+        <div style="font-size:20px;font-weight:800;color:#ea580c;">₨ {{ total_purchase_commission|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#1e40af;font-weight:600;">Sale Commission — فروخت کمیشن</div>
+        <div style="font-size:20px;font-weight:800;color:#2563eb;">₨ {{ total_sale_commission|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:14px;padding:14px;text-align:center;color:white;">
+        <div style="font-size:11px;opacity:0.8;">Total Commission — کل کمیشن</div>
+        <div style="font-size:20px;font-weight:900;">₨ {{ total_purchase_commission|add:total_sale_commission|floatformat:0|intcomma }}</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Broker-wise commissions -->
+{% if purchase_commissions %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#fff7ed;border-bottom:1px solid #fed7aa;font-weight:700;color:#c2410c;">Purchase Commissions (Broker-wise) — خریداری کمیشن</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Broker — دلال</th>
+            <th style="padding:8px 14px;text-align:center;font-size:11px;color:#6b7280;">Purchases</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Commission — کمیشن</th>
+        </tr></thead>
+        <tbody>
+        {% for d in purchase_commissions %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 14px;font-weight:600;">{{ d.broker__name }}</td>
+            <td style="padding:8px 14px;text-align:center;">{{ d.count }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#ea580c;">₨ {{ d.total|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if sale_commissions %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-weight:700;color:#1e40af;">Sale Commissions (Broker-wise) — فروخت کمیشن</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Broker — دلال</th>
+            <th style="padding:8px 14px;text-align:center;font-size:11px;color:#6b7280;">Sales</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Commission — کمیشن</th>
+        </tr></thead>
+        <tbody>
+        {% for d in sale_commissions %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 14px;font-weight:600;">{{ d.broker__name }}</td>
+            <td style="padding:8px 14px;text-align:center;">{{ d.count }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#2563eb;">₨ {{ d.total|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Non-broker commissions -->
+{% if no_broker_purchases or no_broker_sales %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#f5f3ff;border-bottom:1px solid #ddd6fe;font-weight:700;color:#5b21b6;">Direct Commissions (No Broker) — بغیر دلال کمیشن</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Date</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Type</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Ref #</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Party — پارٹی</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Amount — رقم</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Commission %</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Commission — کمیشن</th>
+        </tr></thead>
+        <tbody>
+        {% for p in no_broker_purchases %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/purchases/{{ p.pk }}/'">
+            <td style="padding:8px 14px;">{{ p.date|date:"d/m/Y" }}</td>
+            <td style="padding:8px 14px;"><span style="padding:2px 8px;background:#fff7ed;color:#c2410c;border-radius:8px;font-size:11px;">Purchase</span></td>
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;">{{ p.purchase_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ p.supplier.name }}</td>
+            <td style="padding:8px 14px;text-align:right;">₨ {{ p.grand_total|floatformat:0|intcomma }}</td>
+            <td style="padding:8px 14px;text-align:right;">{{ p.commission_pct }}%</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#7c3aed;">₨ {{ p.commission_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        {% for s in no_broker_sales %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/sales/{{ s.pk }}/'">
+            <td style="padding:8px 14px;">{{ s.date|date:"d/m/Y" }}</td>
+            <td style="padding:8px 14px;"><span style="padding:2px 8px;background:#eff6ff;color:#1e40af;border-radius:8px;font-size:11px;">Sale</span></td>
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;">{{ s.invoice_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ s.customer.name }}</td>
+            <td style="padding:8px 14px;text-align:right;">₨ {{ s.grand_total|floatformat:0|intcomma }}</td>
+            <td style="padding:8px 14px;text-align:right;">{{ s.commission_pct }}%</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#7c3aed;">₨ {{ s.commission_amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if not purchase_commissions and not sale_commissions and not no_broker_purchases and not no_broker_sales %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:40px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">💼</div>
+    <div style="font-size:16px;font-weight:700;color:#374151;">No commissions in this period</div>
+    <div style="font-size:14px;color:#9ca3af;margin-top:4px;">اس عرصے میں کوئی کمیشن نہیں</div>
+</div>
+{% endif %}
+{% endblock %}

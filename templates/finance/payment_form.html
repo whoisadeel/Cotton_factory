@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/party_quick_add.html" %}
+{% include "components/bank_icons.html" %}
+<div style="max-width:720px;margin:0 auto;width:100%;box-sizing:border-box;"
+     x-data="{
+        method: '{{ form.payment_method.value|default:'cash' }}',
+        platform: 'jazzcash',
+        partyId: '{{ form.party.value|default:'' }}',
+        partyBank: { bank_name:'', account_title:'', account_number:'', iban:'' },
+        loadingBank: false,
+        fetchPartyBank() {
+            if (!this.partyId) return;
+            this.loadingBank = true;
+            fetch('/parties/api/' + this.partyId + '/bank-info/')
+                .then(r => r.json())
+                .then(d => {
+                    this.partyBank = d;
+                    if (d.bank_name) {
+                        let f;
+                        f = document.querySelector('[name=recipient_bank_name]'); if (f && !f.value) f.value = d.bank_name;
+                        f = document.querySelector('[name=recipient_account_title]'); if (f && !f.value) f.value = d.account_title;
+                        f = document.querySelector('[name=recipient_account_number]'); if (f && !f.value) f.value = d.account_number;
+                        f = document.querySelector('[name=recipient_iban]'); if (f && !f.value) f.value = d.iban;
+                    }
+                    this.loadingBank = false;
+                })
+                .catch(() => { this.loadingBank = false; });
+        }
+     }"
+     x-init="if(partyId) fetchPartyBank()">
+
+    {% if form.errors %}
+    <div class="error-box">
+        <h3>⚠️ Please fix errors — براہ کرم غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p>• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.action }}
+
+        <!-- ① WHO & WHEN -->
+        <div class="form-card">
+            <div class="form-card-header green">
+                <span class="step-badge green">1</span>
+                Who & When — کسے اور کب
+            </div>
+            <div class="form-card-body" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+                <div>
+                    <label class="form-label">
+                        Pay To — کسے ادائیگی <span class="req">*</span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;" @change="partyId=$event.target.value; fetchPartyBank()">
+                        <div style="flex:1;">{{ form.party }}</div>
+                        <button type="button" onclick="openQuickAdd('supplier','id_party')"
+                            style="width:44px;min-width:44px;height:44px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                            title="Add Supplier — سپلائر شامل کریں">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>{% render_field form.date %}</div>
+            </div>
+            <!-- Party bank info hint -->
+            <div x-show="partyBank.bank_name" x-transition style="display:none;padding:0 20px 16px;">
+                <div class="info-banner green">
+                    <span style="font-size:18px;">🏦</span>
+                    <div>
+                        <div style="font-weight:600;font-size:12px;">Party's bank on file — فائل پر بینک</div>
+                        <div style="font-size:13px;" x-text="partyBank.bank_name + ' — ' + partyBank.account_number"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ② AMOUNT -->
+        <div class="form-card">
+            <div class="amount-center">
+                <div class="amount-label">Amount — رقم <span class="req">*</span></div>
+                {{ form.amount }}
+                <div class="amount-hint">PKR — Pakistani Rupees</div>
+            </div>
+        </div>
+
+        <!-- ③ PAYMENT METHOD -->
+        <div class="form-card">
+            <div class="form-card-header blue">
+                <span class="step-badge blue">2</span>
+                How — ادائیگی کا طریقہ
+            </div>
+            <div class="form-card-body">
+                <!-- Method Cards -->
+                <div class="method-grid">
+                    <label @click="method='cash'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="cash" x-model="method" style="display:none;">
+                        <div class="method-card" :class="method==='cash' && 'mc-active-green'">
+                            <div class="mc-icon">💵</div>
+                            <div class="mc-label">Cash</div>
+                            <div class="mc-sub">نقد</div>
+                        </div>
+                    </label>
+                    <label @click="method='bank'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="bank" x-model="method" style="display:none;">
+                        <div class="method-card" :class="method==='bank' && 'mc-active-blue'">
+                            <div class="mc-icon">🏦</div>
+                            <div class="mc-label">Bank</div>
+                            <div class="mc-sub">بینک ٹرانسفر</div>
+                        </div>
+                    </label>
+                    <label @click="method='cheque'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="cheque" x-model="method" style="display:none;">
+                        <div class="method-card" :class="method==='cheque' && 'mc-active-amber'">
+                            <div class="mc-icon">📝</div>
+                            <div class="mc-label">Cheque</div>
+                            <div class="mc-sub">چیک</div>
+                        </div>
+                    </label>
+                    <label @click="method='online'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="online" x-model="method" style="display:none;">
+                        <div class="method-card" :class="method==='online' && 'mc-active-purple'">
+                            <div class="mc-icon">📱</div>
+                            <div class="mc-label">Online</div>
+                            <div class="mc-sub">آن لائن</div>
+                        </div>
+                    </label>
+                    <label @click="method='adjustment'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="adjustment" x-model="method" style="display:none;">
+                        <div class="method-card" :class="method==='adjustment' && 'mc-active-gray'">
+                            <div class="mc-icon">🔄</div>
+                            <div class="mc-label">Adjust</div>
+                            <div class="mc-sub">ایڈجسٹمنٹ</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- ── CASH DETAILS ── -->
+                <div x-show="method==='cash'" x-transition style="display:none;">
+                    <div class="detail-section green">
+                        <div class="detail-header" style="color:#065f46;">
+                            <span style="font-size:20px;">💵</span>
+                            Cash Payment — نقد ادائیگی
+                        </div>
+                        <div class="detail-grid">
+                            <div>
+                                <label class="form-label" style="color:#065f46;">Received By — کس نے وصول کیا</label>
+                                {{ form.received_by }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#065f46;">Handed By — کس نے دیا</label>
+                                {{ form.handed_by }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#065f46;">Receipt # — رسید نمبر</label>
+                                {{ form.receipt_number }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#065f46;">Date Given — تاریخ</label>
+                                {{ form.cash_given_date }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── BANK DETAILS ── -->
+                <div x-show="method==='bank'" x-transition style="display:none;">
+                    <div class="detail-section blue">
+                        <div class="detail-header" style="color:#1e40af;">
+                            <span style="font-size:20px;">🏦</span>
+                            Bank Transfer — بینک ٹرانسفر
+                        </div>
+                        <div class="detail-grid">
+                            <div>
+                                <label class="form-label" style="color:#1e40af;">Our Account — ہمارا اکاؤنٹ</label>
+                                {{ form.bank_account }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#1e40af;">Reference # — ریفرنس</label>
+                                {{ form.transaction_ref }}
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #93c5fd;">
+                            <div class="detail-header" style="color:#1e40af;font-size:13px;">
+                                <span>📨</span> Their Bank — ان کا بینک
+                            </div>
+                            <div class="detail-grid">
+                                <div>
+                                    <label class="form-label" style="color:#1e40af;">Bank Name — بینک</label>
+                                    {{ form.recipient_bank_name }}
+                                </div>
+                                <div>
+                                    <label class="form-label" style="color:#1e40af;">Account Title — نام</label>
+                                    {{ form.recipient_account_title }}
+                                </div>
+                                <div>
+                                    <label class="form-label" style="color:#1e40af;">Account # — نمبر</label>
+                                    {{ form.recipient_account_number }}
+                                </div>
+                                <div>
+                                    <label class="form-label" style="color:#1e40af;">IBAN — آئی بی اے این</label>
+                                    {{ form.recipient_iban }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── CHEQUE DETAILS ── -->
+                <div x-show="method==='cheque'" x-transition style="display:none;">
+                    <div class="detail-section amber">
+                        <div class="detail-header" style="color:#92400e;">
+                            <span style="font-size:20px;">📝</span>
+                            Cheque Details — چیک کی تفصیلات
+                        </div>
+                        <div class="detail-grid">
+                            <div>
+                                <label class="form-label" style="color:#92400e;">Cheque # — چیک نمبر</label>
+                                {{ form.cheque_number }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#92400e;">Cheque Date — چیک تاریخ</label>
+                                {{ form.cheque_date }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ONLINE PAYMENT ── -->
+                <div x-show="method==='online'" x-transition style="display:none;">
+                    <div class="detail-section purple">
+                        <div class="detail-header" style="color:#5b21b6;">
+                            <span style="font-size:20px;">📱</span>
+                            Online Payment — آن لائن ادائیگی
+                        </div>
+                        <!-- Platform Selector -->
+                        <label class="form-label" style="color:#5b21b6;">Platform — پلیٹ فارم</label>
+                        <div class="platform-grid">
+                            <label @click="platform='jazzcash'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="jazzcash" x-model="platform" style="display:none;">
+                                <div class="platform-card" :class="platform==='jazzcash' && 'pc-active-red'">
+                                    <div class="pc-icon-wrap"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-jazzcash"/></svg></div>
+                                    <div class="pc-label" style="color:#E31837;">JazzCash</div>
+                                </div>
+                            </label>
+                            <label @click="platform='easypaisa'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="easypaisa" x-model="platform" style="display:none;">
+                                <div class="platform-card" :class="platform==='easypaisa' && 'pc-active-green'">
+                                    <div class="pc-icon-wrap"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-easypaisa"/></svg></div>
+                                    <div class="pc-label" style="color:#4CAF50;">EasyPaisa</div>
+                                </div>
+                            </label>
+                            <label @click="platform='bank_app'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="bank_app" x-model="platform" style="display:none;">
+                                <div class="platform-card" :class="platform==='bank_app' && 'pc-active-blue'">
+                                    <div class="pc-icon-wrap"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-other-bank"/></svg></div>
+                                    <div class="pc-label" style="color:#2563eb;">Bank App</div>
+                                </div>
+                            </label>
+                            <label @click="platform='other'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="other" x-model="platform" style="display:none;">
+                                <div class="platform-card" :class="platform==='other' && 'pc-active-purple'">
+                                    <div class="pc-icon-wrap"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-nayapay"/></svg></div>
+                                    <div class="pc-label" style="color:#7c3aed;">Other</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="detail-grid">
+                            <div>
+                                <label class="form-label" style="color:#5b21b6;">Our Account — ہمارا اکاؤنٹ</label>
+                                {{ form.bank_account }}
+                            </div>
+                            <div>
+                                <label class="form-label" style="color:#5b21b6;">Transaction ID — ٹرانزیکشن آئی ڈی</label>
+                                {{ form.transaction_ref }}
+                            </div>
+                        </div>
+                        <!-- Their details -->
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #c4b5fd;">
+                            <div class="detail-header" style="color:#5b21b6;font-size:13px;">
+                                <span>📨</span> Sent To — کسے بھیجا
+                            </div>
+                            <div class="detail-grid">
+                                <div>
+                                    <label class="form-label" style="color:#5b21b6;">Account / Mobile — اکاؤنٹ</label>
+                                    {{ form.recipient_account_number }}
+                                </div>
+                                <div>
+                                    <label class="form-label" style="color:#5b21b6;">Account Title — نام</label>
+                                    {{ form.recipient_account_title }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ADJUSTMENT ── -->
+                <div x-show="method==='adjustment'" x-transition style="display:none;">
+                    <div class="detail-section gray" style="text-align:center;padding:32px;">
+                        <div style="font-size:40px;margin-bottom:10px;">🔄</div>
+                        <p style="font-size:16px;font-weight:700;color:var(--text-primary);">Balance Adjustment — بیلنس ایڈجسٹمنٹ</p>
+                        <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;">Please explain the reason in notes below — نیچے وجہ لکھیں</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ④ NOTES & ATTACHMENT -->
+        <div class="form-card">
+            <div class="form-card-header gray">
+                <span class="step-badge gray">3</span>
+                Notes — تفصیلات
+            </div>
+            <div class="form-card-body" style="display:grid;gap:14px;">
+                <div>{% render_field form.narration %}</div>
+                <div>{% render_field form.attachment %}</div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="action-bar">
+            <a href="{{ back_url|default:'/finance/payments/' }}" class="btn-secondary">
+                ← Back — واپس
+            </a>
+            <button type="submit" class="btn-primary">
+                <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Save Payment — ادائیگی محفوظ کریں
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

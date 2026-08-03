@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto animate-fadeIn" x-data="{ partyType: '{{ form.instance.party_type|default:'supplier' }}' }">
+
+    {% if form.errors %}
+    <div class="mb-6 rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-red-50/50">
+        <div class="px-5 py-4 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-bold text-red-800">Please fix {{ form.errors|length }} error{{ form.errors|length|pluralize }} — براہ کرم غلطیاں درست کریں</h3>
+                <ul class="mt-2 space-y-1">
+                    {% for field_name, errors in form.errors.items %}
+                    <li class="text-sm text-red-700">
+                        <strong>{{ form.fields|get_label:field_name }}:</strong>
+                        {% for e in errors %}{{ e }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded',function(){var e=document.querySelector('.border-red-400');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.focus();}});</script>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Basic Info -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
+                    Basic Info — بنیادی معلومات
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {% render_field form.name %}
+                {% render_field form.name_urdu %}
+                {% render_field form.code %}
+                <!-- Party Type — Visual Selector -->
+                <div style="grid-column: span 2;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;">
+                        Party Type — قسم <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                        {% for val, label in form.fields.party_type.choices %}
+                        <label @click="partyType='{{ val }}'" style="cursor:pointer;">
+                            <input type="radio" name="party_type" value="{{ val }}" x-model="partyType" style="display:none;"
+                                   {% if form.party_type.value == val or form.instance.party_type == val %}checked{% endif %}>
+                            <div :style="partyType==='{{ val }}' ? 'border-color:#059669;background:#f0fdf4;box-shadow:0 0 0 3px rgba(5,150,105,0.12)' : 'border-color:#e5e7eb'"
+                                 style="border:2px solid #e5e7eb;border-radius:12px;padding:12px 8px;text-align:center;transition:all 0.15s;">
+                                <div style="font-size:20px;margin-bottom:2px;">
+                                    {% if val == 'supplier' %}🏭{% elif val == 'customer' %}🛒{% elif val == 'both' %}🔄{% elif val == 'broker' %}🤝{% elif val == 'transporter' %}🚚{% elif val == 'employee' %}👷{% else %}📋{% endif %}
+                                </div>
+                                <div style="font-size:12px;font-weight:700;color:#1e293b;">{{ label }}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% render_field form.company_name %}
+                <div class="flex items-end pb-2"><label class="flex items-center gap-2 cursor-pointer">{{ form.is_active }}<span class="text-sm font-medium text-gray-700">Active — فعال</span></label></div>
+            </div>
+        </div>
+
+        <!-- Identity -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">2</span>
+                    Identity & Tax — شناخت
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {% render_field form.cnic %}
+                {% render_field form.ntn_number %}
+                {% render_field form.sales_tax_number %}
+                <div class="flex items-end pb-2"><label class="flex items-center gap-2 cursor-pointer">{{ form.is_filer }}<span class="text-sm font-medium text-gray-700">Tax Filer — ٹیکس فائلر</span></label></div>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">3</span>
+                    Contact — رابطہ
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {% render_field form.phone_primary %}
+                {% render_field form.whatsapp %}
+                {% render_field form.email %}
+                {% render_field form.city %}
+                {% render_field form.district %}
+                {% render_field form.province %}
+            </div>
+        </div>
+
+        <!-- Financial -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">4</span>
+                    Financial — مالیات
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {% render_field form.opening_balance %}
+                {% render_field form.opening_balance_type %}
+                {% render_field form.opening_balance_date %}
+                {% render_field form.credit_limit %}
+                {% render_field form.credit_days %}
+                <div x-show="partyType === 'broker'" x-transition style="display:none;">
+                    {% render_field form.commission_rate %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Details (collapsible — only show if needed) -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5"
+             x-data="{ showBank: {{ form.bank_name.value|yesno:'true,false' }} }" x-cloak>
+            <button type="button" @click="showBank = !showBank"
+                    style="width:100%;padding:14px 20px;border:none;background:#f9fafb;cursor:pointer;text-align:left;font-weight:700;display:flex;align-items:center;justify-content:space-between;">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#06b6d4,#0891b2);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">5</span>
+                    Bank Details — بینک (optional)
+                </span>
+                <span x-text="showBank ? '▲' : '▼'" style="color:#9ca3af;"></span>
+            </button>
+            <div x-show="showBank" x-transition style="display:none;">
+                <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    {% render_field form.bank_name %}
+                    {% render_field form.account_title %}
+                    {% render_field form.account_number %}
+                    {% render_field form.iban %}
+                    {% render_field form.bank_branch %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5">
+            <div class="p-6">{% render_field form.notes "full" %}</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between">
+            <a href="{% url 'parties:party_list' %}" class="px-5 py-3 text-sm font-semibold text-gray-600 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-all">← Cancel</a>
+            <button type="submit" class="px-8 py-3 text-sm font-bold text-white rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg shadow-emerald-500/25 active:scale-[0.98] flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {% if party %}Update — اپ ڈیٹ{% else %}Create — بنائیں{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fadeIn" style="max-width:600px;margin:0 auto;"
+     x-data="{ 
+         purpose: '{{ form.purpose.value|default:'purchase' }}',
+         gross: {{ form.gross_weight.value|default:'0' }},
+         tare: {{ form.tare_weight.value|default:'0' }},
+         get net() { return Math.max(0, this.gross - this.tare); }
+     }">
+
+    {% if form.errors %}
+    <div style="margin-bottom:20px;border:2px solid #fecaca;background:#fef2f2;padding:16px;border-radius:16px;">
+        <h3 style="font-weight:700;color:#991b1b;">Please fix errors — غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p style="color:#b91c1c;font-size:13px;">• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                🚛 Gate Entry — گیٹ اندراج
+            </div>
+            <div style="padding:20px;">
+                <!-- Purpose -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+                    <label @click="purpose='purchase'" :style="purpose==='purchase' ? 'background:#d1fae5;border-color:#059669;color:#065f46' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="purpose" value="purchase" x-model="purpose" style="display:none;" {% if form.purpose.value == 'purchase' or not form.purpose.value %}checked{% endif %}>
+                        📥 Purchase Delivery
+                    </label>
+                    <label @click="purpose='sale'" :style="purpose==='sale' ? 'background:#dbeafe;border-color:#2563eb;color:#1e40af' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="purpose" value="sale" x-model="purpose" style="display:none;" {% if form.purpose.value == 'sale' %}checked{% endif %}>
+                        📤 Sale Dispatch
+                    </label>
+                    <label @click="purpose='other'" :style="purpose==='other' ? 'background:#f3f4f6;border-color:#6b7280;color:#374151' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="purpose" value="other" x-model="purpose" style="display:none;" {% if form.purpose.value == 'other' %}checked{% endif %}>
+                        🔄 Other
+                    </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Vehicle Number — گاڑی نمبر <span style="color:#dc2626;">*</span></label>
+                        {{ form.vehicle_number }}
+                    </div>
+                    <div>{% render_field form.driver_name %}</div>
+                </div>
+
+                <!-- Weighing section -->
+                <div style="margin-top:16px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e5e7eb;">
+                    <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:12px;">⚖️ Weighing — وزن</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Gross Weight</label>
+                            <input type="number" name="gross_weight" x-model.number="gross" step="0.001" min="0"
+                                   value="{{ form.gross_weight.value|default:'0' }}" placeholder="0.000"
+                                   style="width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:12px;font-size:16px;font-weight:700;text-align:center;outline:none;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Tare Weight</label>
+                            <input type="number" name="tare_weight" x-model.number="tare" step="0.001" min="0"
+                                   value="{{ form.tare_weight.value|default:'0' }}" placeholder="0.000"
+                                   style="width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:12px;font-size:16px;font-weight:700;text-align:center;outline:none;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#059669;margin-bottom:4px;">Net Weight (auto)</label>
+                            <div style="padding:12px;background:#f0fdf4;border-radius:12px;border:2px solid #bbf7d0;text-align:center;font-size:16px;font-weight:800;color:#059669;"
+                                 x-text="net.toFixed(3)">0.000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px;">{% render_field form.notes "full" %}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;">
+            <a href="{{ back_url|default:'/transport/gate/' }}" style="padding:10px 20px;font-size:14px;font-weight:600;color:#4b5563;background:white;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;">← Back</a>
+            <button type="submit" style="padding:12px 28px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                Record Entry — اندراج محفوظ
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>setTimeout(function(){if(typeof Alpine==='undefined'){document.querySelectorAll('[x-show]').forEach(function(el){el.style.display='';})}},500);</script>
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Lot {{ lot.lot_number }}{% endblock %}
+{% block page_title %}Lot {{ lot.lot_number }} — GOT: {{ lot.got_percentage }}%{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5 animate-fadeIn">
+
+    <!-- Progress Summary -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Input — داخلی</div>
+            <div style="font-size:22px;font-weight:800;color:#374151;">{{ lot.input_quantity|floatformat:0 }}</div>
+            <div style="font-size:11px;color:#9ca3af;">{{ lot.input_unit.abbreviation }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Lint Output — روئی</div>
+            <div style="font-size:22px;font-weight:800;color:#059669;">{{ lot.lint_quantity|floatformat:0 }}</div>
+            <div style="font-size:11px;color:#9ca3af;">{{ lot.lint_product.name|default:"—" }}</div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Seed Output — بنولہ</div>
+            <div style="font-size:22px;font-weight:800;color:#2563eb;">{{ lot.seed_quantity|floatformat:0 }}</div>
+            <div style="font-size:11px;color:#9ca3af;">{{ lot.seed_product.name|default:"—" }}</div>
+        </div>
+        <div style="background:linear-gradient(135deg,{% if lot.got_percentage > 0 %}#059669,#10b981{% else %}#6b7280,#9ca3af{% endif %});border-radius:14px;padding:14px;text-align:center;color:white;">
+            <div style="font-size:11px;opacity:0.8;">GOT %</div>
+            <div style="font-size:28px;font-weight:900;">{{ lot.got_percentage|floatformat:1 }}%</div>
+            <div style="font-size:11px;opacity:0.7;">
+                {% if lot.status == 'completed' %}✓ Completed{% else %}⏳ In Progress{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Steps -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:12px;color:#6b7280;">
+        <strong>Workflow — طریقہ کار:</strong>
+        <span style="{% if lot.input_quantity > 0 %}color:#059669;font-weight:600;{% endif %}">① Enter Input</span> →
+        <span style="{% if lot.lint_quantity > 0 %}color:#059669;font-weight:600;{% endif %}">② Enter Outputs</span> →
+        <span style="{% if lot.status == 'completed' %}color:#059669;font-weight:600;{% endif %}">③ Complete Lot (updates stock)</span>
+    </div>
+
+    <!-- Input Info -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <h3 style="font-weight:700;color:#374151;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            <span style="width:28px;height:28px;background:#059669;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">1</span>
+            Input — داخلی
+        </h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:14px;">
+            <div>
+                <span style="color:#6b7280;">Product:</span>
+                <span style="font-weight:600;">{{ lot.input_product.name }}</span>
+            </div>
+            <div>
+                <span style="color:#6b7280;">Quantity:</span>
+                <span style="font-weight:700;font-size:18px;">{{ lot.input_quantity }} {{ lot.input_unit.abbreviation }}</span>
+            </div>
+            <div>
+                <span style="color:#6b7280;">Status:</span>
+                {% if lot.status == 'completed' %}
+                <span style="padding:4px 12px;background:#dcfce7;color:#166534;border-radius:8px;font-size:12px;font-weight:600;">✓ Completed</span>
+                {% else %}
+                <span style="padding:4px 12px;background:#fef3c7;color:#92400e;border-radius:8px;font-size:12px;font-weight:600;">In Progress</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Form -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <h3 style="font-weight:700;color:#374151;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <span style="width:28px;height:28px;background:#2563eb;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">2</span>
+            Output — خارجی
+            <a href="{% url 'products:product_create' %}" target="_blank" style="margin-left:auto;font-size:12px;color:#059669;font-weight:600;text-decoration:none;">+ Add Product</a>
+        </h3>
+        <form method="post">
+            {% csrf_token %}
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <!-- Lint -->
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Lint Product — روئی</label>
+                    <select name="lint_product" style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="">— Select —</option>
+                        {% for p in lint_products %}
+                        <option value="{{ p.pk }}" {% if lot.lint_product_id == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Lint Qty — مقدار</label>
+                    <input type="number" name="lint_quantity" value="{{ lot.lint_quantity }}" step="0.001"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;font-weight:700;">
+                </div>
+                <div style="display:flex;align-items:flex-end;">
+                    <div style="width:100%;padding:16px;background:#f0fdf4;border-radius:12px;text-align:center;">
+                        <span style="font-size:11px;color:#059669;font-weight:600;">GOT %</span><br>
+                        <span style="font-size:28px;font-weight:800;color:#059669;">{{ lot.got_percentage }}%</span>
+                    </div>
+                </div>
+
+                <!-- Seed -->
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Seed Product — بنولہ</label>
+                    <select name="seed_product" style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="">— Select —</option>
+                        {% for p in seed_products %}
+                        <option value="{{ p.pk }}" {% if lot.seed_product_id == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Seed Qty — مقدار</label>
+                    <input type="number" name="seed_quantity" value="{{ lot.seed_quantity }}" step="0.001"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+                <div></div>
+
+                <!-- Waste -->
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Waste Product — جھاڑ</label>
+                    <select name="waste_product" style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="">— Select —</option>
+                        {% for p in waste_products %}
+                        <option value="{{ p.pk }}" {% if lot.waste_product_id == p.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Waste Qty — مقدار</label>
+                    <input type="number" name="waste_quantity" value="{{ lot.waste_quantity }}" step="0.001"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+                <div></div>
+            </div>
+
+            <!-- Costs -->
+            <h3 style="font-weight:700;color:#374151;margin:24px 0 12px;display:flex;align-items:center;gap:8px;">
+                <span style="width:28px;height:28px;background:#d97706;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">3</span>
+                Costs — لاگت
+            </h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Electricity — بجلی</label>
+                    <input type="number" name="electricity_cost" value="{{ lot.electricity_cost }}" step="0.01"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Labour — مزدوری</label>
+                    <input type="number" name="labour_cost" value="{{ lot.labour_cost }}" step="0.01"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Maintenance — مرمت</label>
+                    <input type="number" name="maintenance_cost" value="{{ lot.maintenance_cost }}" step="0.01"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Other — دیگر</label>
+                    <input type="number" name="other_cost" value="{{ lot.other_cost }}" step="0.01"
+                           style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;text-align:right;">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            {% if lot.status != 'completed' %}
+            <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;">
+                <button type="submit"
+                        style="padding:12px 28px;background:#2563eb;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                    💾 Save Output — آؤٹ پٹ محفوظ کریں
+                </button>
+            </div>
+            {% endif %}
+        </form>
+
+        {% if lot.status != 'completed' %}
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+            <form method="post" action="{% url 'ginning:lot_complete' lot.pk %}">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Complete this lot? Stock will be updated. — لاٹ مکمل کریں؟ اسٹاک اپ ڈیٹ ہو جائے گا۔')"
+                        style="padding:12px 28px;background:#059669;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    ✓ Complete Lot — لاٹ مکمل کریں
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <p style="margin-top:16px;font-size:14px;color:#059669;font-weight:600;">✓ This lot is completed — یہ لاٹ مکمل ہو چکا ہے</p>
+        {% endif %}
+    </div>
+
+    <!-- Bales -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <h3 style="font-weight:700;color:#374151;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <span style="width:28px;height:28px;background:#7c3aed;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">4</span>
+            Bales — گانٹھیں ({{ bales.count }})
+        </h3>
+
+        {% if lot.status != 'completed' %}
+        <form method="post" action="{% url 'ginning:bale_create' lot.pk %}"
+              style="display:flex;gap:10px;margin-bottom:16px;padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;flex-wrap:wrap;align-items:end;">
+            {% csrf_token %}
+            <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Weight (KG) — وزن</label>
+                <input type="number" name="weight" step="0.01" placeholder="Weight" required
+                       style="width:120px;padding:10px 12px;border:2px solid #bbf7d0;border-radius:10px;font-size:14px;outline:none;font-weight:700;">
+            </div>
+            <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Grade — درجہ</label>
+                <select name="grade" style="padding:10px 12px;border:2px solid #bbf7d0;border-radius:10px;font-size:14px;background:white;">
+                    <option value="A">Grade A</option>
+                    <option value="B" selected>Grade B</option>
+                    <option value="C">Grade C</option>
+                </select>
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Location — جگہ</label>
+                <input type="text" name="storage_location" placeholder="Storage location"
+                       style="width:100%;padding:10px 12px;border:2px solid #bbf7d0;border-radius:10px;font-size:14px;outline:none;">
+            </div>
+            <button type="submit"
+                    style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;height:44px;">
+                + Add Bale — گانٹھ شامل
+            </button>
+        </form>
+        {% endif %}
+
+        {% if bales %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;">
+            {% for b in bales %}
+            <div style="padding:16px;border:1px solid #e5e7eb;border-radius:12px;text-align:center;">
+                <p style="font-family:monospace;color:#6b7280;font-size:11px;">{{ b.bale_number }}</p>
+                <p style="font-weight:800;font-size:20px;color:#1e293b;margin:4px 0;">{{ b.weight }} KG</p>
+                <p style="font-size:11px;color:#9ca3af;">{{ b.get_grade_display }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:24px;color:#9ca3af;font-size:14px;">No bales yet — ابھی کوئی گانٹھ نہیں</p>
+        {% endif %}
+    </div>
+
+    <!-- Back link -->
+    <div style="display:flex;justify-content:space-between;">
+        <a href="{% url 'ginning:lot_list' %}" style="padding:12px 20px;font-size:14px;font-weight:600;color:#6b7280;background:white;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;">
+            ← Back to Lots — لاٹ کی فہرست
+        </a>
+    </div>
+</div>
+{% endblock %}

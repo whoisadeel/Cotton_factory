@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fadeIn" style="max-width:600px;margin:0 auto;"
+     x-data="{
+         days: {{ form.days_worked.value|default:'0' }},
+         wage: 0,
+         advance: {{ form.advance_deducted.value|default:'0' }},
+         get gross() { return this.days * this.wage; },
+         get net() { return this.gross - this.advance; },
+     }">
+
+    {% if form.errors %}
+    <div style="margin-bottom:20px;border:2px solid #fecaca;background:#fef2f2;padding:16px;border-radius:16px;">
+        <h3 style="font-weight:700;color:#991b1b;">Please fix errors — غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p style="color:#b91c1c;font-size:13px;">• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Worker Selection -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Worker & Period — مزدور اور مدت
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div style="grid-column:span 2;">
+                    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Worker — مزدور <span style="color:#dc2626;">*</span>
+                    </label>
+                    <select name="worker" required
+                            @change="wage = parseFloat(event.target.selectedOptions[0].dataset.wage || 0); if(event.target.value) fetch('/labour/api/attendance-summary/'+event.target.value+'/').then(r=>r.json()).then(d=>{document.querySelector('[x-data]').closest('[x-data]')._x_dataStack && (document.querySelector('[x-data*=summary]') ? document.querySelector('[x-data*=summary]')._x_dataStack[0].summary=d : null)})"
+                            style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="">— Select Worker —</option>
+                        {% for w in form.worker.field.queryset %}
+                        <option value="{{ w.pk }}" data-wage="{{ w.daily_wage }}"
+                                {% if form.worker.value|stringformat:"s" == w.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ w.name }} — {{ w.get_worker_type_display }} (₨{{ w.daily_wage }}/day)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Attendance Summary (loads when worker selected) -->
+                <div x-data="{ summary: null }" style="grid-column:span 2;margin-top:8px;">
+                    <div x-show="summary" x-transition
+                         style="display:none;padding:12px 16px;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;">
+                        <p style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px;">📊 This Month's Attendance — اس مہینے کی حاضری</p>
+                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;">
+                            <div><p style="font-size:18px;font-weight:800;color:#059669;" x-text="summary?.present || 0"></p><p style="font-size:10px;color:#6b7280;">Present</p></div>
+                            <div><p style="font-size:18px;font-weight:800;color:#dc2626;" x-text="summary?.absent || 0"></p><p style="font-size:10px;color:#6b7280;">Absent</p></div>
+                            <div><p style="font-size:18px;font-weight:800;color:#f59e0b;" x-text="summary?.half_day || 0"></p><p style="font-size:10px;color:#6b7280;">Half Day</p></div>
+                            <div><p style="font-size:18px;font-weight:800;color:#6366f1;" x-text="(summary?.overtime_hours || 0) + ' hrs'"></p><p style="font-size:10px;color:#6b7280;">Overtime</p></div>
+                            <div><p style="font-size:18px;font-weight:800;color:#dc2626;" x-text="'₨' + (summary?.pending_advances || 0).toLocaleString()"></p><p style="font-size:10px;color:#6b7280;">Advances</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div>{% render_field form.date %}</div>
+            </div>
+        </div>
+
+        <!-- Calculation -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Calculation — حساب
+            </div>
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Days Worked — دن</label>
+                        <input type="number" name="days_worked" x-model.number="days" min="0" max="31"
+                               value="{{ form.days_worked.value|default:'0' }}"
+                               style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:12px;font-size:20px;font-weight:700;text-align:center;outline:none;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Daily Rate — روزانہ</label>
+                        <div style="padding:14px;background:#f0fdf4;border-radius:12px;text-align:center;font-size:18px;font-weight:700;color:#059669;"
+                             x-text="'₨ ' + wage.toLocaleString()">₨ 0</div>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Advance Deduct — پیشگی</label>
+                        <input type="number" name="advance_deducted" x-model.number="advance" step="0.01" min="0"
+                               value="{{ form.advance_deducted.value|default:'0' }}"
+                               style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:12px;font-size:16px;text-align:center;outline:none;">
+                    </div>
+                </div>
+
+                <!-- Auto-calculated amounts -->
+                <div style="margin-top:16px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e5e7eb;">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;">
+                        <span style="color:#6b7280;">Gross — کل اجرت</span>
+                        <span style="font-weight:700;" x-text="'₨ ' + gross.toLocaleString()">₨ 0</span>
+                    </div>
+                    <div style="display:none;justify-content:space-between;padding:6px 0;font-size:14px;color:#dc2626;" x-show="advance > 0" :style="advance > 0 ? 'display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:#dc2626;' : 'display:none;'">
+                        <span>Less Advance — منفی پیشگی</span>
+                        <span x-text="'- ₨ ' + advance.toLocaleString()">- ₨ 0</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:8px;border-top:2px solid #059669;font-size:20px;font-weight:800;color:#059669;">
+                        <span>Net Pay — خالص</span>
+                        <span x-text="'₨ ' + net.toLocaleString()">₨ 0</span>
+                    </div>
+                </div>
+
+                <!-- Hidden fields for actual submission -->
+                <input type="hidden" name="gross_amount" :value="gross">
+                <input type="hidden" name="net_amount" :value="net">
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:20px;">{% render_field form.narration "full" %}</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;">
+            <a href="{{ back_url|default:'/labour/payments/' }}" style="padding:10px 20px;font-size:14px;font-weight:600;color:#4b5563;background:white;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;">← Back</a>
+            <button type="submit" style="padding:12px 28px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                Save Payment — ادائیگی محفوظ
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+setTimeout(function() {
+    if (typeof Alpine === 'undefined') {
+        document.querySelectorAll('[x-show]').forEach(function(el) { el.style.display = ''; });
+        // Show hidden inputs
+        document.querySelectorAll('input[type=hidden][name=gross_amount],input[type=hidden][name=net_amount]').forEach(function(el) {
+            var div = document.createElement('div');
+            div.style.cssText = 'margin-top:8px;';
+            div.innerHTML = '<label style="font-size:13px;font-weight:600;">' + el.name.replace('_',' ') + '</label><input type="number" name="'+el.name+'" value="0" style="width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:12px;font-size:16px;text-align:center;">';
+            el.parentNode.insertBefore(div, el);
+            el.remove();
+        });
+    }
+}, 500);
+</script>
+{% endblock %}

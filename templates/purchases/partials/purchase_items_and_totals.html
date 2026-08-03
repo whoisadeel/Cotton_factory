@@ -1,0 +1,163 @@
+{% load humanize %}
+{% if items %}
+{% for item in items %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:10px;"
+     x-data="{ showWB: {{ item.gross_weight|default:'0' }} > 0 }">
+
+    {# ── Header: Product + conversion badge + delete ── #}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-weight:700;font-size:15px;color:#1f2937;">{{ item.product.name }}</span>
+            <span style="font-size:11px;color:#9ca3af;">({{ item.product.category.name }})</span>
+            {% if item.bags_count and item.bags_count > 0 %}
+            <span style="font-size:11px;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:6px;">📦 {{ item.bags_count|floatformat:0 }} bags</span>
+            {% endif %}
+            {% if item.net_weight and item.net_weight > 0 %}
+            <span style="font-size:11px;padding:3px 8px;background:#f0fdf4;color:#059669;border-radius:6px;font-weight:600;">
+                {% if item.unit.abbreviation == "KG" %}{{ item.net_weight|floatformat:0 }} KG = {% widthratio item.net_weight 40 1 %} من
+                {% elif item.unit.abbreviation == "MND" %}{{ item.quantity|floatformat:1 }} من = {{ item.net_weight|floatformat:0|intcomma }} KG
+                {% else %}{{ item.quantity|floatformat:1 }} {{ item.unit.abbreviation }} = {{ item.net_weight|floatformat:0|intcomma }} KG = {% widthratio item.net_weight 40 1 %} من{% endif %}
+            </span>
+            {% endif %}
+        </div>
+        {% if purchase.status == 'draft' %}
+        <button hx-post="{% url 'purchases:purchase_delete_item' purchase.pk item.pk %}"
+                hx-target="#items-and-totals" hx-swap="innerHTML"
+                hx-confirm="Remove {{ item.product.name }}?"
+                hx-indicator="#save-indicator"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                style="padding:4px 8px;border:none;background:#fef2f2;color:#dc2626;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0;">✕</button>
+        {% endif %}
+    </div>
+
+    {# ── Fields row: Bags | Weight+Unit | Weighbridge | Rate+Basis ── #}
+    <div style="display:grid;grid-template-columns:70px 1fr auto 1fr;gap:10px;align-items:end;">
+        {# Bags — optional #}
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#9ca3af;margin-bottom:3px;">Bags بوری</label>
+            <input type="number" step="1" min="0" value="{{ item.bags_count|default_if_none:'' }}" name="value" placeholder="—"
+                   style="width:100%;padding:9px 2px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;outline:none;text-align:center;box-sizing:border-box;color:#6b7280;"
+                   hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                   hx-vals='{"field":"bags_count"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+        </div>
+        {# Weight + Unit #}
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#374151;margin-bottom:3px;">Net Weight — خالص وزن <span style="color:#ef4444;">*</span></label>
+            <div style="display:flex;gap:4px;">
+                <input type="number" step="0.001" min="0" value="{{ item.quantity }}" name="value" placeholder="e.g. 10"
+                       style="flex:1;padding:9px 8px;border:2px solid #2563eb;border-radius:8px;font-size:16px;font-weight:700;outline:none;text-align:right;box-sizing:border-box;"
+                       hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                       hx-vals='{"field":"quantity"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+                <select name="value" style="width:90px;padding:9px 4px;border:2px solid #2563eb;border-radius:8px;font-size:13px;font-weight:600;outline:none;background:white;"
+                        hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                        hx-vals='{"field":"unit"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+                    {% for u in units %}<option value="{{ u.pk }}" {% if item.unit_id == u.pk %}selected{% endif %}>{{ u.abbreviation }}{% if u.conversion_to_base and u.conversion_to_base != 1 %} ({{ u.conversion_to_base|floatformat:0 }}kg){% endif %}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        {# Weighbridge toggle #}
+        <div>
+            <button type="button" @click="showWB = !showWB"
+                    style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;color:#6b7280;background:white;text-align:center;"
+                    :style="showWB ? 'background:#eff6ff;border-color:#2563eb;color:#2563eb;' : ''">
+                🚛 ترازو
+            </button>
+        </div>
+        {# Rate + basis selector #}
+        <div>
+            <label style="display:block;font-size:10px;font-weight:600;color:#374151;margin-bottom:3px;">Rate — نرخ <span style="color:#ef4444;">*</span></label>
+            <div style="display:flex;gap:3px;align-items:stretch;">
+                <div style="position:relative;flex:1;">
+                    <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-weight:600;color:#9ca3af;font-size:13px;">₨</span>
+                    <input type="number" step="0.01" min="0" value="{{ item.rate }}" name="value" placeholder="0"
+                           style="width:100%;padding:9px 8px 9px 24px;border:2px solid #059669;border-radius:8px 0 0 8px;font-size:16px;font-weight:700;outline:none;text-align:right;box-sizing:border-box;"
+                           hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                           hx-vals='{"field":"rate"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+                </div>
+                <select style="padding:6px 4px;border:2px solid #059669;border-left:none;border-radius:0 8px 8px 0;font-size:11px;font-weight:700;outline:none;background:#f0fdf4;color:#059669;cursor:pointer;"
+                        hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                        hx-vals='{"field":"rate_basis"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator"
+                        name="value">
+                    {% for u in units %}
+                    <option value="{{ u.abbreviation }}" {% if item.rate_basis == u.abbreviation %}selected{% endif %}
+                            {% if not item.rate_basis and u.pk == item.unit_id %}selected{% endif %}>
+                        / {{ u.abbreviation }}{% if u.conversion_to_base and u.conversion_to_base != 1 %} ({{ u.conversion_to_base|floatformat:0 }}kg){% endif %}
+                    </option>
+                    {% endfor %}
+                    <option value="total" {% if item.rate_basis == "total" %}selected{% endif %}>Total کل</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {# ── Amount display — prominent ── #}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 14px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:10px;">
+        <div style="font-size:11px;color:#6b7280;display:flex;gap:10px;flex-wrap:wrap;">
+            {% if item.net_weight and item.net_weight > 0 and item.net_amount and item.net_amount > 0 %}
+            <span>📊</span>
+            <span style="color:#059669;font-weight:600;">₨{% widthratio item.net_amount item.net_weight 1 %}/KG</span>
+            <span style="color:#7c3aed;font-weight:600;">₨{% widthratio item.net_amount item.net_weight 40 %}/من</span>
+            {% endif %}
+        </div>
+        <div style="text-align:right;">
+            <span style="font-size:11px;color:#6b7280;margin-right:6px;">Amount — رقم</span>
+            <span style="font-size:24px;font-weight:900;color:#1d4ed8;">₨ {{ item.net_amount|floatformat:0|intcomma }}</span>
+        </div>
+    </div>
+
+    {# ── Weighbridge expandable ── #}
+    <div x-show="showWB" x-transition style="display:none;" :style="showWB ? 'display:block' : 'display:none'">
+        <div style="margin-top:8px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end;">
+                <div>
+                    <label style="display:block;font-size:10px;font-weight:600;color:#374151;margin-bottom:3px;">🚛 Loaded KG — بھری گاڑی</label>
+                    <input type="number" step="1" min="0" value="{{ item.gross_weight|default_if_none:'' }}" name="value" placeholder="e.g. 12000"
+                           style="width:100%;padding:9px;border:2px solid #d1d5db;border-radius:8px;font-size:15px;font-weight:700;outline:none;text-align:right;box-sizing:border-box;"
+                           hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                           hx-vals='{"field":"gross_weight"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+                </div>
+                <div>
+                    <label style="display:block;font-size:10px;font-weight:600;color:#374151;margin-bottom:3px;">🚛 Empty KG — خالی گاڑی</label>
+                    <input type="number" step="1" min="0" value="{{ item.tare_weight|default_if_none:'' }}" name="value" placeholder="e.g. 2000"
+                           style="width:100%;padding:9px;border:2px solid #d1d5db;border-radius:8px;font-size:14px;font-weight:600;outline:none;text-align:right;box-sizing:border-box;"
+                           hx-post="{% url 'purchases:purchase_save_item_field' purchase.pk item.pk %}" hx-trigger="change"
+                           hx-vals='{"field":"tare_weight"}' hx-target="#items-and-totals" hx-swap="innerHTML" hx-indicator="#save-indicator">
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:10px;color:#6b7280;">Net — خالص</div>
+                    <div style="font-size:18px;font-weight:900;color:#059669;">{{ item.net_weight|floatformat:0|intcomma }} KG</div>
+                    {% if item.net_weight and item.net_weight > 0 %}
+                    <div style="font-size:11px;color:#7c3aed;">= {% widthratio item.net_weight 40 1 %} من</div>
+                    {% endif %}
+                </div>
+            </div>
+            <p style="margin-top:6px;font-size:10px;color:#9ca3af;">Gross − Tare auto-fills Net Weight above — ترازو سے اوپر وزن خود بھر جائے گا</p>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{# ── Items summary (when multiple items) ── #}
+{% if items|length > 1 %}
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <span style="font-size:12px;color:#6b7280;font-weight:600;">📋 {{ items|length }} items — آئٹمز</span>
+    <div style="display:flex;gap:14px;font-size:12px;">
+        {% with total_nw=0 total_amt=0 %}
+        {% for i in items %}{% endfor %}
+        {% endwith %}
+        <span style="color:#059669;font-weight:700;">Total Weight: see totals below</span>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div style="text-align:center;padding:36px;color:#9ca3af;background:white;border:1px solid #e5e7eb;border-radius:14px;">
+    <div style="font-size:40px;margin-bottom:8px;">📦</div>
+    <p style="font-weight:600;font-size:15px;">No items yet — ابھی کوئی آئٹم نہیں</p>
+    <p style="font-size:13px;">Select product above → click "Add" — اوپر پروڈکٹ منتخب کریں</p>
+</div>
+{% endif %}
+
+<div id="totals-section">
+    {% include "purchases/partials/purchase_totals.html" %}
+</div>

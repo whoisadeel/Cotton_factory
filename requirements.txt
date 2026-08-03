@@ -1,0 +1,28 @@
+# Cotton Factory Management System - Requirements
+# Phase 1A: Foundation
+# Pinned versions as of July 2026
+
+# Core Framework
+Django==6.0.7
+psycopg2-binary==2.9.12      # PostgreSQL adapter (for production)
+
+# Authentication & Security
+bcrypt==5.0.0                 # Password hashing (BCryptSHA256PasswordHasher)
+
+# Django Extensions
+django-htmx==1.27.0           # HTMX middleware & request helpers
+Pillow==12.2.0                # Image handling (profile pictures, logos)
+python-decouple==3.8           # Environment variable management
+
+# ASGI/WSGI
+asgiref==3.11.1
+
+# Future phases (uncomment when needed)
+# weasyprint>=62.0             # PDF generation (invoices, reports)
+# celery>=5.4                  # Task queue (backups, email)
+# redis>=5.0                   # Cache & Celery broker
+# django-import-export>=4.0    # Data import/export
+# gunicorn>=22.0               # Production WSGI server
+cryptography>=43.0
+whitenoise
+django-apscheduler>=0.6

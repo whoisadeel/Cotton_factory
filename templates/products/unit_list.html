@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Units of Measurement{% endblock %}
+{% block page_title %}Units of Measurement{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <a href="{% url 'products:product_list' %}" class="text-sm text-gray-500 hover:text-emerald-600">← Back to Products</a>
+        <a href="{% url 'products:unit_create' %}" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Unit
+        </a>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Abbreviation</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">1 Unit = ? KG</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for unit in units %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ unit.name }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ unit.abbreviation }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ unit.get_unit_type_display }}</td>
+                    <td class="px-4 py-3 text-sm text-right text-gray-600">{{ unit.conversion_to_base }}</td>
+                    <td class="px-4 py-3 text-center">
+                        {% if unit.is_active %}
+                        <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">Active</span>
+                        {% else %}
+                        <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <a href="{% url 'products:unit_edit' unit.pk %}" class="p-1.5 text-gray-400 hover:text-emerald-600 rounded-lg inline-block">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">No units found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

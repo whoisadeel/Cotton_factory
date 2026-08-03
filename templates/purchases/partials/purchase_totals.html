@@ -1,0 +1,29 @@
+{% load humanize %}
+<div style="display:flex;justify-content:flex-end;">
+    <div style="width:100%;max-width:340px;font-size:14px;">
+        {% if purchase.sales_tax_amount or purchase.wht_amount or purchase.commission_amount or purchase.bardana_charges or purchase.hamali_charges or purchase.freight_charges or purchase.tulai_charges or purchase.mandi_fee or purchase.other_charges %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#6b7280;">Subtotal (ذیلی کل)</span><span style="font-weight:500;">₨ {{ purchase.subtotal|floatformat:0|intcomma }}</span></div>
+        {% if purchase.bardana_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Bardana (بردانہ)</span><span>₨ {{ purchase.bardana_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.commission_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Commission {% if purchase.commission_pct %}({{ purchase.commission_pct }}%){% endif %}</span><span>₨ {{ purchase.commission_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.hamali_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Hamali (حمالی)</span><span>₨ {{ purchase.hamali_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.tulai_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Tulai (تلائی)</span><span>₨ {{ purchase.tulai_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.mandi_fee %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Mandi Fee</span><span>₨ {{ purchase.mandi_fee|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.freight_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Freight (بھاڑا)</span><span>₨ {{ purchase.freight_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.other_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Other (دیگر)</span><span>₨ {{ purchase.other_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.sales_tax_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#d97706;">+ Sales Tax {% if purchase.sales_tax_pct %}({{ purchase.sales_tax_pct }}%){% endif %}</span><span style="color:#d97706;">₨ {{ purchase.sales_tax_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.wht_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#dc2626;">+ WHT {% if purchase.wht_pct %}({{ purchase.wht_pct }}%){% endif %}</span><span style="color:#dc2626;">₨ {{ purchase.wht_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if purchase.total_discount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#ef4444;">− Discount (رعایت)</span><span style="color:#ef4444;">₨ {{ purchase.total_discount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #e5e7eb;margin-top:4px;font-weight:800;font-size:16px;">
+            <span style="color:#374151;">Grand Total (کل رقم)</span>
+            <span style="color:#059669;">₨ {{ purchase.grand_total|floatformat:0|intcomma }}</span>
+        </div>
+        {% if purchase.amount_paid %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#6b7280;">Paid (ادائیگی)</span><span style="color:#059669;">₨ {{ purchase.amount_paid|floatformat:0|intcomma }}</span></div>
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:#fef2f2;border-radius:10px;margin-top:4px;font-weight:800;font-size:16px;">
+            <span style="color:#dc2626;">Balance Due (بقایا)</span>
+            <span style="color:#dc2626;">₨ {{ purchase.balance_due|floatformat:0|intcomma }}</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div style="max-width:500px;margin:0 auto;width:100%;box-sizing:border-box;">
+    <div style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+        <a href="{% url 'accounting:chart' %}" style="color:#059669;text-decoration:none;">← Chart of Accounts</a>
+    </div>
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:24px;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px;">Group Type — قسم</label>
+                    <select name="group_type" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        {% for code, label in group_types %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px;">Code — کوڈ <span style="color:#dc2626;">*</span></label>
+                    <input type="text" name="code" required placeholder="e.g., 7" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px;">Name — نام <span style="color:#dc2626;">*</span></label>
+                    <input type="text" name="name" required placeholder="e.g., Fixed Assets" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:4px;">Name (Urdu) — اردو نام</label>
+                    <input type="text" name="name_urdu" placeholder="اردو میں نام" dir="rtl" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:20px;">
+                <a href="{% url 'accounting:chart' %}" style="padding:12px 24px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;color:#6b7280;">Cancel</a>
+                <button type="submit" style="padding:12px 32px;background:#059669;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Create Group — گروپ بنائیں</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

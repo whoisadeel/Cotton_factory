@@ -1,0 +1,26 @@
+{# Reusable instant-save field component #}
+{# Usage: {% include "components/smart_field.html" with url=save_url field="amount" value=obj.amount type="number" label="Amount" label_ur="رقم" %} #}
+<div class="group">
+    {% if label %}
+    <label class="block text-sm font-medium text-gray-600 mb-1">
+        {{ label }}
+        {% if label_ur %}<span class="text-gray-400 text-xs mr-1">({{ label_ur }})</span>{% endif %}
+    </label>
+    {% endif %}
+    <input type="{{ type|default:'text' }}"
+           name="{{ field }}"
+           value="{{ value }}"
+           {% if step %}step="{{ step }}"{% endif %}
+           {% if min_val %}min="{{ min_val }}"{% endif %}
+           placeholder="{{ placeholder|default:'' }}"
+           class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                  focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400
+                  bg-white hover:border-gray-300 transition-all outline-none
+                  group-[.saved]:border-emerald-300 group-[.saved]:bg-emerald-50/30"
+           hx-post="{{ url }}"
+           hx-trigger="change, blur changed"
+           hx-vals='{"field": "{{ field }}"}'
+           hx-swap="none"
+           hx-indicator="#save-indicator"
+           {% if target %}hx-target="{{ target }}" hx-swap="innerHTML"{% endif %}>
+</div>

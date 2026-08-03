@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings — ترتیبات{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Company Info -->
+        <div class="card bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5" style="margin-bottom:20px;">
+            <div class="card-header" style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Company Information — کمپنی
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label class="form-label">Company Name</label>
+                    <input type="text" name="company_name" value="{{ settings.company_name }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Company Name (Urdu)</label>
+                    <input type="text" name="company_name_urdu" value="{{ settings.company_name_urdu }}" dir="rtl" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div style="grid-column:span 2;">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" rows="2" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;" style="resize:vertical;">{{ settings.address }}</textarea>
+                </div>
+                <div>
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" value="{{ settings.city }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">District</label>
+                    <input type="text" name="district" value="{{ settings.district }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" value="{{ settings.phone }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" value="{{ settings.email }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">NTN Number</label>
+                    <input type="text" name="ntn_number" value="{{ settings.ntn_number }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Sales Tax Number</label>
+                    <input type="text" name="sales_tax_number" value="{{ settings.sales_tax_number }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Logo</label>
+                    <input type="file" name="logo" accept="image/*" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax & Finance -->
+        <div class="card bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5" style="margin-bottom:20px;">
+            <div class="card-header" style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Tax & Finance — ٹیکس اور مالیات
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label class="form-label">Financial Year Start</label>
+                    <select name="financial_year_start" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                        {% for val, name in settings.MONTH_CHOICES %}
+                        <option value="{{ val }}" {% if settings.financial_year_start == val %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Currency</label>
+                    <input type="text" name="currency" value="{{ settings.currency }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Currency Symbol</label>
+                    <input type="text" name="currency_symbol" value="{{ settings.currency_symbol }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Sales Tax Rate %</label>
+                    <input type="number" name="sales_tax_rate" value="{{ settings.sales_tax_rate }}" step="0.01" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label"><span data-tooltip="Withholding Tax — ود ہولڈنگ ٹیکس">WHT</span> Rate — Filer %</label>
+                    <input type="number" name="wht_rate_filer" value="{{ settings.wht_rate_filer }}" step="0.01" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label"><span data-tooltip="Withholding Tax — ود ہولڈنگ ٹیکس">WHT</span> Rate — Non-Filer %</label>
+                    <input type="number" name="wht_rate_non_filer" value="{{ settings.wht_rate_non_filer }}" step="0.01" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- System Settings -->
+        <div class="card bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5" style="margin-bottom:20px;">
+            <div class="card-header" style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                System Settings — سسٹم ترتیبات
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                    <label class="form-label">Default Weight Unit</label>
+                    <select name="default_weight_unit" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                        <option value="MAUND" {% if settings.default_weight_unit == 'MAUND' %}selected{% endif %}>Maund (من)</option>
+                        <option value="KG" {% if settings.default_weight_unit == 'KG' %}selected{% endif %}>Kilogram</option>
+                        <option value="TON" {% if settings.default_weight_unit == 'TON' %}selected{% endif %}>Ton</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">1 Maund = ? KG</label>
+                    <input type="number" name="maund_to_kg" value="{{ settings.maund_to_kg }}" step="0.01" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Invoice Prefix</label>
+                    <input type="text" name="invoice_prefix" value="{{ settings.invoice_prefix }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Purchase Prefix</label>
+                    <input type="text" name="purchase_prefix" value="{{ settings.purchase_prefix }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Payment Prefix</label>
+                    <input type="text" name="payment_prefix" value="{{ settings.payment_prefix }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Receipt Prefix</label>
+                    <input type="text" name="receipt_prefix" value="{{ settings.receipt_prefix }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label">Date Format</label>
+                    <select name="date_format" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                        <option value="DD/MM/YYYY" {% if settings.date_format == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY</option>
+                        <option value="MM/DD/YYYY" {% if settings.date_format == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY</option>
+                        <option value="YYYY-MM-DD" {% if settings.date_format == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Session Timeout (min)</label>
+                    <input type="number" name="session_timeout_minutes" value="{{ settings.session_timeout_minutes }}" class="form-input" style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div style="grid-column:span 2;display:flex;gap:24px;padding-top:8px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" name="negative_stock_allowed" {% if settings.negative_stock_allowed %}checked{% endif %} style="width:18px;height:18px;accent-color:#10b981;">
+                        Allow Negative Stock
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" name="low_stock_alert_enabled" {% if settings.low_stock_alert_enabled %}checked{% endif %} style="width:18px;height:18px;accent-color:#10b981;">
+                        Low Stock Alerts
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email & Backup Settings -->
+        <div class="card bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-5" style="margin-bottom:20px;">
+            <div class="card-header" style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);font-weight:700;color:#1e40af;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;">📧</span>
+                Email Backup & Reports — ای میل بیک اپ اور رپورٹ
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div style="grid-column:span 2;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" name="backup_enabled" {% if settings.backup_enabled %}checked{% endif %}
+                               style="width:18px;height:18px;accent-color:#059669;">
+                        <span style="font-size:14px;font-weight:700;color:#374151;">Enable Daily Backup Email — روزانہ بیک اپ</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" name="report_enabled" {% if settings.report_enabled %}checked{% endif %}
+                               style="width:18px;height:18px;accent-color:#2563eb;">
+                        <span style="font-size:14px;font-weight:700;color:#374151;">Enable Daily Reports — روزانہ رپورٹ</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:13px;font-weight:600;">Gmail Email — جی میل</label>
+                    <input type="email" name="backup_email" value="{{ settings.backup_email }}"
+                           placeholder="your-email@gmail.com"
+                           style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:13px;font-weight:600;">Gmail App Password — ایپ پاسورڈ</label>
+                    <input type="password" name="backup_email_password" value="{{ settings.backup_email_password }}"
+                           placeholder="xxxx xxxx xxxx xxxx"
+                           style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                    <div style="font-size:11px;color:#6b7280;margin-top:2px;">Google Account → Security → 2-Step → App Passwords</div>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:13px;font-weight:600;">Secondary Email — ثانوی ای میل</label>
+                    <input type="email" name="backup_email_secondary" value="{{ settings.backup_email_secondary }}"
+                           placeholder="backup@example.com"
+                           style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+                <div style="display:flex;align-items:end;">
+                    <div style="font-size:12px;color:#6b7280;">
+                        <strong>Schedule:</strong> Backup at 11PM, Morning Agenda at 7AM, Evening Summary at 10PM (Pakistan time)
+                        {% if settings.last_backup_email_at %}<br>Last backup: {{ settings.last_backup_email_at|date:"d/m/Y h:i A" }}{% endif %}
+                        {% if settings.last_report_email_at %}<br>Last report: {{ settings.last_report_email_at|date:"d/m/Y h:i A" }}{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #f3f4f6;background:#f9fafb;display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="submit" formaction="{% url 'settings_app:test_backup_email' %}" formmethod="post"
+                        style="padding:8px 16px;background:#1e40af;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+                    📦 Test Backup
+                </button>
+                <button type="submit" formaction="{% url 'settings_app:test_report_email' %}" formmethod="post"
+                        style="padding:8px 16px;background:#059669;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;"
+                        onclick="var h=document.createElement('input');h.type='hidden';h.name='report_type';h.value='morning';this.form.appendChild(h);">
+                    ☀️ Test Morning Agenda
+                </button>
+                <button type="submit" formaction="{% url 'settings_app:test_report_email' %}" formmethod="post"
+                        style="padding:8px 16px;background:#334155;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;"
+                        onclick="var h=document.createElement('input');h.type='hidden';h.name='report_type';h.value='evening';this.form.appendChild(h);">
+                    🌙 Test Evening Summary
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div style="margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="{% url 'finance:bank_account_list' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:inline-flex;align-items:center;gap:6px;">🏦 Bank Accounts</a>
+            <a href="{% url 'settings_app:financial_years' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:inline-flex;align-items:center;gap:6px;">📅 Financial Years</a>
+            <a href="{% url 'settings_app:backup' %}" style="padding:10px 18px;background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;color:#1e40af;display:inline-flex;align-items:center;gap:6px;">💾 Backup & Restore</a>
+            <a href="{% url 'settings_app:data_import' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:inline-flex;align-items:center;gap:6px;">📊 CSV Import/Export</a>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex;justify-content:flex-end;">
+            <button type="submit" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(16,185,129,0.3);display:flex;align-items:center;gap:8px;">
+                ✓ Save Settings — ترتیبات محفوظ کریں
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

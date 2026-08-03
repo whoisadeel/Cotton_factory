@@ -1,0 +1,59 @@
+{#
+  Error summary banner — shows at top of form when validation fails.
+  Usage: {% include "components/form_errors.html" %}
+  Note: Do NOT use "with form=form" — it causes infinite recursion.
+#}
+{% load form_tags %}
+{% if form.errors %}
+<div class="mb-6 rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-red-50/50 overflow-hidden"
+     x-data="{ open: true }"
+     id="form-errors-banner">
+    <div class="px-5 py-4 flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-red-800 text-base">
+                Please fix {{ form.errors|length }} error{{ form.errors|length|pluralize }} below
+                <span class="text-red-500 text-sm font-normal mr-2">— براہ کرم نیچے دی گئی {{ form.errors|length }} غلطیاں درست کریں</span>
+            </h3>
+            <ul class="mt-2 space-y-1">
+                {% for field_name, errors in form.errors.items %}
+                {% if field_name != '__all__' %}
+                <li class="flex items-center gap-2 text-sm text-red-700">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    <span>
+                        <strong>{{ form.fields|get_label:field_name }}:</strong>
+                        {% for e in errors %}{{ e }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </span>
+                </li>
+                {% else %}
+                {% for e in errors %}
+                <li class="flex items-center gap-2 text-sm text-red-700">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    <span>{{ e }}</span>
+                </li>
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <button @click="open = false; document.getElementById('form-errors-banner').remove()"
+                class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+</div>
+<script>
+    // Auto-scroll to the first error field
+    document.addEventListener('DOMContentLoaded', function() {
+        var firstError = document.querySelector('.border-red-400');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+    });
+</script>
+{% endif %}

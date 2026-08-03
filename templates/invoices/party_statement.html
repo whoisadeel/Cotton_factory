@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1e293b; }
+    .header { border-bottom: 3px solid #1e293b; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; }
+    .company-name { font-size: 20px; font-weight: bold; }
+    .title { font-size: 18px; font-weight: bold; text-align: right; }
+    .party-info { margin-bottom: 14px; padding: 10px; background: #f8fafc; border-radius: 6px; display: flex; justify-content: space-between; }
+    .period { font-size: 11px; color: #6b7280; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f1f5f9; padding: 6px 8px; text-align: left; font-size: 9px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+    th.right { text-align: right; }
+    td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; font-size: 10px; }
+    td.right { text-align: right; }
+    .total-row { font-weight: bold; border-top: 2px solid #1e293b; }
+    .balance-box { margin-top: 14px; text-align: right; font-size: 14px; }
+    .balance-box .amount { font-size: 18px; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="header">
+    <div>
+        <div class="company-name">{{ company.company_name|default:"Cotton Factory" }}</div>
+        <div style="font-size:10px;color:#6b7280;">{{ company.address }} {{ company.city }}</div>
+    </div>
+    <div style="text-align:right;">
+        <div class="title">ACCOUNT STATEMENT</div>
+        <div style="font-size:13px;color:#6b7280;">اکاؤنٹ اسٹیٹمنٹ</div>
+    </div>
+</div>
+
+<div class="party-info">
+    <div>
+        <strong style="font-size:14px;">{{ party.name }}</strong>
+        {% if party.city %}<br>{{ party.city }}{% endif %}
+        {% if party.phone_primary %}<br>{{ party.phone_primary }}{% endif %}
+    </div>
+    <div style="text-align:right;">
+        <span class="period">Period: {{ start|date:"d/m/Y" }} — {{ end|date:"d/m/Y" }}</span><br>
+        <strong>Code: {{ party.code }}</strong>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Date</th><th>Type</th><th>Reference</th>
+            <th class="right">Debit</th><th class="right">Credit</th><th class="right">Balance</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in entries %}
+        <tr>
+            <td>{{ e.date|date:"d/m/Y" }}</td>
+            <td>{{ e.type }}</td>
+            <td>{{ e.ref }}</td>
+            <td class="right">{% if e.debit %}₨ {{ e.debit|floatformat:2 }}{% endif %}</td>
+            <td class="right">{% if e.credit %}₨ {{ e.credit|floatformat:2 }}{% endif %}</td>
+            <td class="right" style="{% if e.balance > 0 %}color:#059669{% elif e.balance < 0 %}color:#dc2626{% endif %}">
+                ₨ {{ e.balance|floatformat:2 }}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af;">No transactions</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="balance-box">
+    Current Balance — موجودہ بیلنس:
+    <span class="amount" style="{% if party.current_balance > 0 %}color:#059669{% elif party.current_balance < 0 %}color:#dc2626{% endif %}">
+        {{ party.balance_display }}
+    </span>
+</div>
+</body>
+</html>

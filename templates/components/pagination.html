@@ -1,0 +1,40 @@
+{% if page_obj.has_other_pages %}
+<nav class="flex items-center justify-between px-2 py-4 mt-4" aria-label="Pagination — صفحات">
+    <div class="text-sm text-gray-500">
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+        <span class="hidden sm:inline">— دکھا رہے ہیں {{ page_obj.start_index }} سے {{ page_obj.end_index }}</span>
+    </div>
+    <div class="flex items-center gap-1">
+        {% if page_obj.has_previous %}
+        <a href="?{% for key, val in request.GET.items %}{% if key != 'page' %}{{ key }}={{ val }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+           style="padding:8px 14px;font-size:13px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;color:#374151;background:white;">
+            ← Previous
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-3 py-2 text-sm font-bold text-white bg-emerald-600 rounded-lg"
+                  style="padding:8px 14px;font-size:13px;border-radius:10px;background:#059669;color:white;font-weight:700;">
+                {{ num }}
+            </span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+            <a href="?{% for key, val in request.GET.items %}{% if key != 'page' %}{{ key }}={{ val }}&{% endif %}{% endfor %}page={{ num }}"
+               class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+               style="padding:8px 14px;font-size:13px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;color:#6b7280;background:white;">
+                {{ num }}
+            </a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?{% for key, val in request.GET.items %}{% if key != 'page' %}{{ key }}={{ val }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+           style="padding:8px 14px;font-size:13px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;color:#374151;background:white;">
+            Next →
+        </a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

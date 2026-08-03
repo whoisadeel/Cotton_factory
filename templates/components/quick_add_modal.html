@@ -1,0 +1,113 @@
+{% comment %}Generic Quick-Add Modal{% endcomment %}
+<div x-data="quickAddModal()" :style="open ? 'display:block' : 'display:none'" style="display:none;">
+
+    <div @click="open=false" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;"></div>
+
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;width:440px;max-width:92vw;">
+        <div style="background:white;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,0.2);overflow:hidden;">
+
+            <div style="padding:20px 24px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <div style="width:44px;height:44px;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <svg style="width:24px;height:24px;" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </div>
+                        <h3 style="font-size:18px;font-weight:800;color:#0f172a;margin:0;" x-text="title"></h3>
+                    </div>
+                    <button @click="open=false" type="button" style="width:40px;height:40px;border-radius:12px;border:none;background:#f1f5f9;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div style="padding:28px;">
+                <template x-if="error">
+                    <div style="margin-bottom:20px;padding:14px 18px;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;display:flex;align-items:center;gap:10px;">
+                        <svg style="width:20px;height:20px;flex-shrink:0;color:#ef4444;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                        <p style="color:#dc2626;font-size:14px;font-weight:600;margin:0;" x-text="error"></p>
+                    </div>
+                </template>
+
+                <div style="margin-bottom:28px;">
+                    <label style="display:block;font-size:14px;font-weight:700;color:#0f172a;margin-bottom:8px;">
+                        Name — نام <span style="color:#ef4444;font-size:16px;">*</span>
+                    </label>
+                    <input type="text" x-model="name" x-ref="qamInput" @keydown.enter.prevent="save()"
+                           placeholder="Enter name — نام لکھیں" class="qam-input">
+                </div>
+
+                <div style="display:flex;gap:12px;">
+                    <button @click="open=false" type="button" class="qam-btn-cancel">Cancel — منسوخ</button>
+                    <button @click="save()" :disabled="saving" type="button" class="qam-btn-save"
+                            :class="saving && 'qam-btn-saving'">
+                        <span x-text="saving ? 'Saving...' : '✓ Save — محفوظ کریں'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.qam-input {
+    width:100%;padding:14px 18px;border:2px solid #e2e8f0;border-radius:14px;
+    font-size:16px;font-weight:600;outline:none;background:white;
+    box-sizing:border-box;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.qam-input:focus { border-color:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,0.1); }
+.qam-btn-cancel {
+    flex:1;padding:14px;background:white;color:#475569;border:2px solid #e2e8f0;
+    border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;
+    transition:background 0.15s;
+}
+.qam-btn-cancel:hover { background:#f8fafc; }
+.qam-btn-save {
+    flex:1.5;padding:14px;background:linear-gradient(135deg,#2563eb,#3b82f6);
+    color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;
+    cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.3);
+    transition:box-shadow 0.15s,opacity 0.15s;
+}
+.qam-btn-save:hover { box-shadow:0 6px 20px rgba(37,99,235,0.4); }
+.qam-btn-saving { opacity:0.6;cursor:wait !important; }
+</style>
+
+<script>
+function quickAddModal() {
+    return {
+        open: false, title: '', apiUrl: '', targetSelectId: '',
+        name: '', error: '', saving: false,
+        openModal(title, apiUrl, targetId) {
+            this.title = title; this.apiUrl = apiUrl; this.targetSelectId = targetId;
+            this.name = ''; this.error = ''; this.saving = false;
+            this.open = true;
+            var self = this;
+            setTimeout(function() { if (self.$refs.qamInput) self.$refs.qamInput.focus(); }, 100);
+        },
+        save() {
+            if (!this.name.trim()) { this.error = 'Please enter a name — براہ کرم نام لکھیں'; return; }
+            this.saving = true; this.error = '';
+            var token = ''; var meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) token = meta.getAttribute('content');
+            var self = this; var fd = new FormData();
+            fd.append('name', this.name.trim());
+            fetch(this.apiUrl, { method: 'POST', headers: { 'X-CSRFToken': token }, body: fd })
+            .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
+            .then(function(res) {
+                if (!res.ok) { self.error = res.data.error || 'Error'; self.saving = false; return; }
+                var d = res.data; var sel = document.getElementById(self.targetSelectId);
+                if (sel) {
+                    var opt = new Option(d.name, d.id, true, true);
+                    sel.appendChild(opt); sel.value = d.id;
+                    sel.dispatchEvent(new Event('change', {bubbles: true}));
+                }
+                self.open = false; self.saving = false;
+            })
+            .catch(function() { self.error = 'Network error — نیٹ ورک کی خرابی'; self.saving = false; });
+        }
+    };
+}
+function openGenericQuickAdd(title, apiUrl, targetId) {
+    var el = document.querySelector('[x-data*="quickAddModal"]');
+    if (el && el._x_dataStack) el._x_dataStack[0].openModal(title, apiUrl, targetId);
+}
+</script>

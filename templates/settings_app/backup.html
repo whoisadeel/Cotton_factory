@@ -1,0 +1,188 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Backup & Restore{% endblock %}
+{% block page_title %}Backup & Restore — بیک اپ اور بحالی{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;margin:0 auto;width:100%;" class="space-y-5">
+
+    <div style="font-size:13px;color:#6b7280;">
+        <a href="{% url 'settings_app:index' %}" style="color:#059669;text-decoration:none;">← Settings — ترتیبات</a>
+    </div>
+
+    <!-- Info Box -->
+    <div style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:16px;padding:16px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#1e40af;margin-bottom:4px;">💾 This is the ONLY reliable backup method</div>
+        <div style="font-size:13px;color:#1e40af;line-height:1.5;">
+            SQLite backup preserves <strong>everything</strong> — all balances, stock levels, journals, payment statuses, units, and settings.
+            Download regularly and store safely. To restore, just upload the file below.
+            <br>یہ واحد قابل اعتماد بیک اپ طریقہ ہے — تمام بیلنس، اسٹاک، جرنل محفوظ رہتے ہیں۔
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- DOWNLOAD BACKUP                     -->
+    <!-- ═══════════════════════════════════ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+            <div style="font-weight:700;color:#1e40af;display:flex;align-items:center;gap:8px;font-size:16px;">
+                <span style="font-size:22px;">💾</span>
+                Download Backup — بیک اپ ڈاؤنلوڈ
+            </div>
+            <div style="font-size:12px;color:#3b82f6;margin-top:4px;">
+                Database size: {{ db_size|filesizeformat }} — Complete copy of all your data
+            </div>
+        </div>
+        <form method="post" style="padding:20px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="download">
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                    🔐 Encryption Password — خفیہ پاسورڈ <span style="color:#9ca3af;font-weight:400;">(optional — اختیاری)</span>
+                </label>
+                <input type="password" name="backup_password" placeholder="Leave empty for plain backup"
+                       style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;">
+                <div style="font-size:11px;color:#6b7280;margin-top:4px;">
+                    If you set a password, the backup file will be encrypted. You'll need the same password to restore it.
+                    <br>اگر آپ پاسورڈ ڈالیں گے تو فائل خفیہ ہو جائے گی۔ بحالی کے لیے وہی پاسورڈ درکار ہوگا۔
+                </div>
+            </div>
+
+            <button type="submit"
+                    style="width:100%;padding:14px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">
+                💾 Download Backup — بیک اپ ڈاؤنلوڈ کریں
+            </button>
+        </form>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- RESTORE FROM BACKUP                 -->
+    <!-- ═══════════════════════════════════ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#fef3c7,#fde68a);">
+            <div style="font-weight:700;color:#92400e;display:flex;align-items:center;gap:8px;font-size:16px;">
+                <span style="font-size:22px;">🔄</span>
+                Restore from Backup — بیک اپ سے بحال کریں
+            </div>
+            <div style="font-size:12px;color:#b45309;margin-top:4px;">
+                Upload a backup file to replace all current data — Your current data will be auto-saved first
+            </div>
+        </div>
+        <form method="post" enctype="multipart/form-data" style="padding:20px;"
+              onsubmit="return confirm('⚠️ WARNING: This will REPLACE ALL current data!\n\nYour current database will be auto-saved before replacement.\n\nAre you sure?\n\nتمام موجودہ ڈیٹا بدل جائے گا۔ کیا آپ کو یقین ہے؟');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="restore">
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                    📁 Select Backup File — بیک اپ فائل منتخب کریں
+                </label>
+                <input type="file" name="restore_file" accept=".sqlite3,.enc,.encrypted,.db" required
+                       style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;">
+                <div style="font-size:11px;color:#6b7280;margin-top:4px;">
+                    Accepts .sqlite3 (plain) or .sqlite3.enc (encrypted) files
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                    🔐 Decryption Password — خفیہ پاسورڈ <span style="color:#9ca3af;font-weight:400;">(only for encrypted files)</span>
+                </label>
+                <input type="password" name="restore_password" placeholder="Leave empty for plain backups"
+                       style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;">
+            </div>
+
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px;margin-bottom:16px;">
+                <div style="font-size:12px;color:#991b1b;font-weight:600;">
+                    ⚠️ This will REPLACE all current data. Your current database will be auto-saved to the backups folder.
+                    <br>یہ تمام موجودہ ڈیٹا بدل دے گا۔ آپ کا موجودہ ڈیٹا بیس خود بخود محفوظ ہو جائے گا۔
+                </div>
+            </div>
+
+            <button type="submit"
+                    style="width:100%;padding:14px;background:linear-gradient(135deg,#d97706,#f59e0b);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">
+                🔄 Restore Backup — بیک اپ بحال کریں
+            </button>
+        </form>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PASSWORD RECOVERY                   -->
+    <!-- ═══════════════════════════════════ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+                <div style="font-size:14px;font-weight:700;color:#374151;">🔑 Forgot Encryption Password?</div>
+                <div style="font-size:12px;color:#6b7280;">Send the system encryption key to your configured email</div>
+            </div>
+            <form method="post" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_recovery">
+                <button type="submit"
+                        style="padding:10px 20px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;color:#374151;">
+                    📧 Email Recovery Key
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- EXISTING BACKUPS                    -->
+    <!-- ═══════════════════════════════════ -->
+    {% if backups %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;font-weight:700;color:#374151;font-size:14px;">
+            📂 Local Backups ({{ backups|length }}) — مقامی بیک اپس
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f9fafb;">
+                        <th style="padding:10px 16px;text-align:left;font-weight:600;color:#6b7280;">File</th>
+                        <th style="padding:10px 16px;text-align:right;font-weight:600;color:#6b7280;">Size</th>
+                        <th style="padding:10px 16px;text-align:right;font-weight:600;color:#6b7280;">Date</th>
+                        <th style="padding:10px 16px;text-align:center;font-weight:600;color:#6b7280;">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in backups %}
+                    <tr style="border-top:1px solid #f3f4f6;">
+                        <td style="padding:10px 16px;font-weight:600;">{{ b.name }}</td>
+                        <td style="padding:10px 16px;text-align:right;color:#6b7280;">{{ b.size|filesizeformat }}</td>
+                        <td style="padding:10px 16px;text-align:right;color:#6b7280;">{{ b.date|date:"d/m/Y H:i" }}</td>
+                        <td style="padding:10px 16px;text-align:center;">
+                            {% if b.encrypted %}
+                            <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">🔐 Encrypted</span>
+                            {% else %}
+                            <span style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">Plain</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="padding:10px 16px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6;">
+            Local backups are in the <code>backups/</code> folder. Only the latest 10 are kept.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CSV section — secondary -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;font-weight:700;color:#6b7280;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+            <span>📊 CSV Export — for Excel / Sharing (not for backup)</span>
+            <a href="{% url 'settings_app:data_import' %}" style="font-size:12px;color:#2563eb;text-decoration:none;font-weight:600;">CSV Import →</a>
+        </div>
+        <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px;">
+            {% for label, type in csv_types %}
+            <a href="{% url 'settings_app:data_export' %}?type={{ type }}"
+               style="padding:6px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;text-decoration:none;color:#374151;font-weight:600;">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

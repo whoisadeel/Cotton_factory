@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/party_quick_add.html" %}
+{% include "components/bank_icons.html" %}
+<div style="max-width:720px;margin:0 auto;width:100%;box-sizing:border-box;"
+     x-data="{
+        method: '{{ form.payment_method.value|default:'cash' }}',
+        platform: 'jazzcash',
+        partyId: '{{ form.party.value|default:'' }}',
+        partyBank: { bank_name:'', account_title:'', account_number:'', iban:'' },
+        loadingBank: false,
+        fetchPartyBank() {
+            if (!this.partyId) return;
+            this.loadingBank = true;
+            fetch('/parties/api/' + this.partyId + '/bank-info/')
+                .then(r => r.json())
+                .then(d => {
+                    this.partyBank = d;
+                    if (d.bank_name) {
+                        let f;
+                        f = document.querySelector('[name=sender_bank_name]');
+                        if (f && !f.value) f.value = d.bank_name;
+                        f = document.querySelector('[name=sender_account_title]');
+                        if (f && !f.value) f.value = d.account_title;
+                        f = document.querySelector('[name=sender_account_number]');
+                        if (f && !f.value) f.value = d.account_number;
+                        f = document.querySelector('[name=sender_iban]');
+                        if (f && !f.value) f.value = d.iban;
+                    }
+                    this.loadingBank = false;
+                })
+                .catch(() => { this.loadingBank = false; });
+        }
+     }"
+     x-init="if(partyId) fetchPartyBank()">
+
+    {% if form.errors %}
+    <div style="margin-bottom:20px;border:2px solid #fecaca;background:#fef2f2;padding:20px;border-radius:16px;">
+        <h3 style="font-weight:700;color:#991b1b;margin-bottom:8px;">⚠️ Please fix errors — براہ کرم غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p style="color:#b91c1c;font-size:13px;">• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.action }}
+
+        <!-- ① WHO & WHEN -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);font-weight:700;font-size:15px;color:#065f46;display:flex;align-items:center;gap:8px;">
+                <span style="width:28px;height:28px;background:#059669;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">1</span>
+                Who & When — کس سے اور کب
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Received From — کس سے وصولی <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;" @change="partyId=$event.target.value; fetchPartyBank()">
+                        <div style="flex:1;">{{ form.party }}</div>
+                        <button type="button" onclick="openQuickAdd('customer','id_party')"
+                            style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                            title="Add Customer — گاہک شامل کریں">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                    </div>
+                </div>
+                <div>{% render_field form.date %}</div>
+            </div>
+            <div x-show="partyBank.bank_name" x-transition style="display:none;padding:0 20px 16px;">
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:18px;">🏦</span>
+                    <div>
+                        <div style="font-size:12px;color:#166534;font-weight:600;">Party's bank on file — فائل پر بینک</div>
+                        <div style="font-size:13px;color:#374151;" x-text="partyBank.bank_name + ' — ' + partyBank.account_number"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ② AMOUNT -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:28px;text-align:center;">
+                <label style="display:block;font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+                    Amount — رقم <span style="color:#ef4444;">*</span>
+                </label>
+                {{ form.amount }}
+                <div style="margin-top:8px;font-size:12px;color:#9ca3af;">PKR — Pakistani Rupees</div>
+            </div>
+        </div>
+
+        <!-- ③ PAYMENT METHOD -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);font-weight:700;font-size:15px;color:#1e40af;display:flex;align-items:center;gap:8px;">
+                <span style="width:28px;height:28px;background:#2563eb;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">2</span>
+                How — وصولی کا طریقہ
+            </div>
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;">
+                    <label @click="method='cash'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="cash" x-model="method" style="display:none;">
+                        <div :class="method==='cash' && 'mc-active-green'"
+                             class="method-card">
+                            <div style="font-size:28px;margin-bottom:6px;">💵</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;">Cash</div>
+                            <div style="font-size:10px;color:#6b7280;">نقد</div>
+                        </div>
+                    </label>
+                    <label @click="method='bank'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="bank" x-model="method" style="display:none;">
+                        <div :class="method==='bank' && 'mc-active-blue'"
+                             class="method-card">
+                            <div style="font-size:28px;margin-bottom:6px;">🏦</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;">Bank</div>
+                            <div style="font-size:10px;color:#6b7280;">بینک ٹرانسفر</div>
+                        </div>
+                    </label>
+                    <label @click="method='cheque'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="cheque" x-model="method" style="display:none;">
+                        <div :class="method==='cheque' && 'mc-active-amber'"
+                             class="method-card">
+                            <div style="font-size:28px;margin-bottom:6px;">📝</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;">Cheque</div>
+                            <div style="font-size:10px;color:#6b7280;">چیک</div>
+                        </div>
+                    </label>
+                    <label @click="method='online'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="online" x-model="method" style="display:none;">
+                        <div :class="method==='online' && 'mc-active-purple'"
+                             class="method-card">
+                            <div style="font-size:28px;margin-bottom:6px;">📱</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;">Online</div>
+                            <div style="font-size:10px;color:#6b7280;">آن لائن</div>
+                        </div>
+                    </label>
+                    <label @click="method='adjustment'" style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="adjustment" x-model="method" style="display:none;">
+                        <div :class="method==='adjustment' && 'mc-active-gray'"
+                             class="method-card">
+                            <div style="font-size:28px;margin-bottom:6px;">🔄</div>
+                            <div style="font-size:13px;font-weight:700;color:#1e293b;">Adjust</div>
+                            <div style="font-size:10px;color:#6b7280;">ایڈجسٹمنٹ</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- ── CASH ── -->
+                <div x-show="method==='cash'" x-transition style="display:none;">
+                    <div style="padding:20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                            <span style="font-size:20px;">💵</span>
+                            <span style="font-size:14px;font-weight:700;color:#166534;">Cash Receipt Details — نقد وصولی کی تفصیل</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Paid By — کس نے ادا کیا</label>
+                                {{ form.paid_by }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Received By Us — ہم نے کس سے لیا</label>
+                                {{ form.received_by_us }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Receipt # — رسید نمبر</label>
+                                {{ form.receipt_number }}
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Date Received — تاریخ</label>
+                                    {{ form.cash_received_date }}
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;">Time — وقت</label>
+                                    {{ form.cash_received_time }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── BANK TRANSFER ── -->
+                <div x-show="method==='bank'" x-transition style="display:none;">
+                    <div style="padding:20px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                            <span style="font-size:20px;">🏦</span>
+                            <span style="font-size:14px;font-weight:700;color:#1e40af;">Bank Transfer — بینک ٹرانسفر</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div style="grid-column:span 2;">
+                                <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">Our Bank Account — ہمارا اکاؤنٹ</label>
+                                {{ form.bank_account }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">Reference # — ریفرنس نمبر</label>
+                                {{ form.transaction_ref }}
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #93c5fd;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+                                <span style="font-size:14px;">📨</span>
+                                <span style="font-size:13px;font-weight:700;color:#1e40af;">Their Bank Details — ان کے بینک کی تفصیلات</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">Bank Name — بینک</label>
+                                    {{ form.sender_bank_name }}
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">Account Title — اکاؤنٹ ٹائٹل</label>
+                                    {{ form.sender_account_title }}
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">Account Number — اکاؤنٹ نمبر</label>
+                                    {{ form.sender_account_number }}
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#1e40af;margin-bottom:4px;">IBAN — آئی بی اے این</label>
+                                    {{ form.sender_iban }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── CHEQUE ── -->
+                <div x-show="method==='cheque'" x-transition style="display:none;">
+                    <div style="padding:20px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                            <span style="font-size:20px;">📝</span>
+                            <span style="font-size:14px;font-weight:700;color:#92400e;">Cheque Details — چیک کی تفصیل</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div style="grid-column:span 2;">
+                                <label style="display:block;font-size:12px;font-weight:600;color:#92400e;margin-bottom:4px;">Our Bank Account — ہمارا اکاؤنٹ</label>
+                                {{ form.bank_account }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#92400e;margin-bottom:4px;">Cheque # — چیک نمبر</label>
+                                {{ form.cheque_number }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#92400e;margin-bottom:4px;">Cheque Date — چیک تاریخ</label>
+                                {{ form.cheque_date }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ONLINE ── -->
+                <div x-show="method==='online'" x-transition style="display:none;">
+                    <div style="padding:20px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                            <span style="font-size:20px;">📱</span>
+                            <span style="font-size:14px;font-weight:700;color:#5b21b6;">Online Receipt — آن لائن وصولی</span>
+                        </div>
+                        <label style="display:block;font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:8px;">Platform — پلیٹ فارم</label>
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
+                            <label @click="platform='jazzcash'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="jazzcash" x-model="platform" style="display:none;">
+                                <div :class="platform==='jazzcash' && 'pc-active-red'"
+                                     style="border:2px solid #ddd6fe;border-radius:12px;padding:12px;text-align:center;transition:all 0.2s;">
+                                    <div style="width:32px;height:32px;margin:0 auto 4px;"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-jazzcash"/></svg></div>
+                                    <div style="font-size:11px;font-weight:700;color:#E31837;">JazzCash</div>
+                                </div>
+                            </label>
+                            <label @click="platform='easypaisa'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="easypaisa" x-model="platform" style="display:none;">
+                                <div :class="platform==='easypaisa' && 'pc-active-green'"
+                                     style="border:2px solid #ddd6fe;border-radius:12px;padding:12px;text-align:center;transition:all 0.2s;">
+                                    <div style="width:32px;height:32px;margin:0 auto 4px;"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-easypaisa"/></svg></div>
+                                    <div style="font-size:11px;font-weight:700;color:#4CAF50;">EasyPaisa</div>
+                                </div>
+                            </label>
+                            <label @click="platform='bank_app'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="bank_app" x-model="platform" style="display:none;">
+                                <div :class="platform==='bank_app' && 'pc-active-blue'"
+                                     style="border:2px solid #ddd6fe;border-radius:12px;padding:12px;text-align:center;transition:all 0.2s;">
+                                    <div style="width:32px;height:32px;margin:0 auto 4px;"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-other-bank"/></svg></div>
+                                    <div style="font-size:11px;font-weight:700;color:#2563eb;">Bank App</div>
+                                </div>
+                            </label>
+                            <label @click="platform='other'" style="cursor:pointer;">
+                                <input type="radio" name="online_platform" value="other" x-model="platform" style="display:none;">
+                                <div :class="platform==='other' && 'pc-active-purple'"
+                                     style="border:2px solid #ddd6fe;border-radius:12px;padding:12px;text-align:center;transition:all 0.2s;">
+                                    <div style="width:32px;height:32px;margin:0 auto 4px;"><svg viewBox="0 0 32 32" width="36" height="36"><use href="#icon-nayapay"/></svg></div>
+                                    <div style="font-size:11px;font-weight:700;color:#7c3aed;">Other</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:4px;">Our Account — ہمارا اکاؤنٹ</label>
+                                {{ form.bank_account }}
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:4px;">Transaction ID — ٹرانزیکشن آئی ڈی</label>
+                                {{ form.transaction_ref }}
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px dashed #c4b5fd;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+                                <span style="font-size:14px;">📨</span>
+                                <span style="font-size:13px;font-weight:700;color:#5b21b6;">Sent From — کس نے بھیجا</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:4px;">Account / Mobile — اکاؤنٹ</label>
+                                    {{ form.sender_account_number }}
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:4px;">Account Title — نام</label>
+                                    {{ form.sender_account_title }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ADJUSTMENT ── -->
+                <div x-show="method==='adjustment'" x-transition style="display:none;">
+                    <div style="padding:24px;background:linear-gradient(135deg,#f9fafb,#f3f4f6);border-radius:16px;text-align:center;">
+                        <div style="font-size:36px;margin-bottom:8px;">🔄</div>
+                        <p style="font-size:15px;font-weight:600;color:#374151;">Balance Adjustment — بیلنس ایڈجسٹمنٹ</p>
+                        <p style="font-size:13px;color:#9ca3af;margin-top:6px;">Please explain the reason in the description below<br>نیچے تفصیل لکھیں</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ④ NOTES -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f9fafb,#f3f4f6);font-weight:700;font-size:15px;color:#374151;display:flex;align-items:center;gap:8px;">
+                <span style="width:28px;height:28px;background:#6b7280;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">3</span>
+                Notes — تفصیلات
+            </div>
+            <div style="padding:20px;display:grid;gap:14px;">
+                <div>{% render_field form.narration %}</div>
+                <div>{% render_field form.attachment %}</div>
+            </div>
+        </div>
+
+        <!-- REDIRECT TO PARTY (optional cross-party) -->
+        <div style="background:white;border:2px solid #ddd6fe;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+            <div style="padding:16px 20px;border-bottom:1px solid #ede9fe;background:linear-gradient(135deg,#f5f3ff,#ede9fe);font-weight:700;font-size:15px;color:#5b21b6;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;">🔄</span>
+                Redirect Payment — ادائیگی بھیجیں <span style="font-size:12px;font-weight:400;color:#7c3aed;">(optional — اختیاری)</span>
+            </div>
+            <div style="padding:20px;">
+                <div style="font-size:13px;color:#6d28d9;margin-bottom:12px;line-height:1.6;">
+                    Want to redirect this money to pay someone you owe? Select the party below.<br>
+                    <span style="font-size:12px;color:#8b5cf6;">کیا آپ یہ رقم کسی اور کو بھیجنا چاہتے ہیں جس کے آپ مقروض ہیں؟ نیچے پارٹی منتخب کریں۔</span>
+                </div>
+                {{ form.redirect_to_party }}
+                
+                <!-- Payable toggle -->
+                <div id="owe-toggle" style="display:none;margin-top:12px;background:#f5f3ff;border-radius:10px;padding:14px;">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                        {{ form.we_owe_them }}
+                        <div>
+                            <span style="font-size:14px;font-weight:700;color:#5b21b6;">This is a Payable — واجب الادا ہے</span>
+                            <div style="font-size:12px;color:#7c3aed;margin-top:2px;">
+                                ✓ Checked = settling a payable (balance adjusts) — واجب الادا کی ادائیگی<br>
+                                ✗ Unchecked = service/other (balance stays same) — خدمت کی ادائیگی
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        (function(){
+            var sel = document.querySelector('[name="redirect_to_party"]');
+            var toggle = document.getElementById('owe-toggle');
+            function update(){ toggle.style.display = sel && sel.value ? 'block' : 'none'; }
+            if(sel){ sel.addEventListener('change', update); update(); }
+        })();
+        </script>
+
+        <!-- ACTIONS -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <a href="{{ back_url|default:'/finance/receipts/' }}"
+               style="padding:14px 24px;font-size:14px;font-weight:600;color:#6b7280;background:white;border:2px solid #e5e7eb;border-radius:14px;text-decoration:none;">
+                ← Back — واپس
+            </a>
+            <button type="submit"
+                    style="padding:16px 40px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(16,185,129,0.3);display:flex;align-items:center;gap:10px;"
+                    onmouseover="this.style.boxShadow='0 6px 20px rgba(16,185,129,0.4)'"
+                    onmouseout="this.style.boxShadow='0 4px 15px rgba(16,185,129,0.3)'">
+                <svg style="width:22px;height:22px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Save Receipt — وصولی محفوظ کریں
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+setTimeout(function() {
+    if (typeof Alpine === 'undefined') {
+        document.querySelectorAll('[x-show]').forEach(function(el) { el.style.display = ''; });
+    }
+}, 500);
+</script>
+{% endblock %}

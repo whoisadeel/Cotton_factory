@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Products — مصنوعات
+{% endblock %}
+{% block page_title %}Products — مصنوعات{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'products:category_list' %}"
+               class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Categories
+            </a>
+            <a href="{% url 'products:unit_list' %}"
+               class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Units
+            </a>
+        </div>
+        <a href="{% url 'products:product_create' %}"
+           class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Product
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <form method="get" class="flex flex-col sm:flex-row gap-3"
+              hx-get="{% url 'products:product_list' %}"
+              hx-target="#product-table"
+              hx-trigger="change, input delay:300ms from:find input[name=search]">
+            <div class="flex-1">
+                <input type="text" name="search" value="{{ search }}" placeholder="Search products..."
+                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+            </div>
+            <select name="category"
+                    class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"i" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="status"
+                    class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
+                <option value="">All Status</option>
+                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Product Table -->
+    <div id="product-table">
+        {% include "products/partials/product_table.html" %}
+    </div>
+
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}

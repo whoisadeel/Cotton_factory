@@ -1,0 +1,11 @@
+<!-- Reusable search bar for list pages -->
+<div class="flex items-center gap-3 flex-wrap">
+    <form method="get" class="flex-1 flex items-center gap-2" style="min-width:200px;max-width:400px;">
+        <div class="relative flex-1">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" name="search" value="{{ search|default:'' }}" placeholder="Search — تلاش کریں..."
+                   class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+        </div>
+        {% if search %}<a href="?" class="text-xs text-gray-400 hover:text-gray-600">Clear</a>{% endif %}
+    </form>
+</div>

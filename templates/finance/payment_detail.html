@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ v.voucher_number }}{% endblock %}
+{% block page_title %}Payment Details — ادائیگی کی تفصیل{% endblock %}
+
+{% block content %}
+{% include "components/bank_icons.html" %}
+<div style="max-width:720px;margin:0 auto;width:100%;box-sizing:border-box;">
+
+    <!-- Breadcrumb -->
+    <div style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+        <a href="{% url 'finance:payment_list' %}" style="color:#059669;text-decoration:none;">← All Payments — تمام ادائیگیاں</a>
+        <span style="margin:0 6px;">›</span> {{ v.voucher_number }}
+    </div>
+
+    <!-- Header -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#6b7280;font-family:monospace;">{{ v.voucher_number }}</div>
+                <div style="font-size:14px;color:#374151;margin-top:4px;">{{ v.date|date:"d M Y" }}</div>
+            </div>
+            <div style="text-align:right;">
+                {% if v.status == 'final' %}
+                <span style="padding:6px 16px;border-radius:16px;font-size:13px;font-weight:700;background:#dcfce7;color:#166534;">✓ Final — حتمی</span>
+                {% elif v.status == 'void' %}
+                <span style="padding:6px 16px;border-radius:16px;font-size:13px;font-weight:700;background:#fee2e2;color:#991b1b;">✗ Void — منسوخ</span>
+                {% else %}
+                <span style="padding:6px 16px;border-radius:16px;font-size:13px;font-weight:700;background:#fef3c7;color:#92400e;">Draft — مسودہ</span>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Amount -->
+        <div style="text-align:center;padding:24px 0 16px;">
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Amount Paid — ادا شدہ رقم</div>
+            <div style="font-size:36px;font-weight:800;color:#dc2626;margin-top:8px;">₨ {{ v.amount|floatformat:0|intcomma }}</div>
+        </div>
+        <!-- To -->
+        <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-top:8px;">
+            <div style="font-size:12px;color:#6b7280;">Paid To — کسے ادائیگی</div>
+            <div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">{{ v.party.name }}</div>
+            {% if v.party.city %}<div style="font-size:13px;color:#6b7280;">{{ v.party.city }}{% if v.party.phone_primary %} • {{ v.party.phone_primary }}{% endif %}</div>{% endif %}
+        </div>
+    </div>
+
+    <!-- Method Details -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;color:#374151;margin-bottom:16px;">Payment Method — طریقہ</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:12px;font-weight:700;font-size:14px;
+            {% if v.payment_method == 'cash' %}background:#dcfce7;color:#166534;
+            {% elif v.payment_method == 'bank' %}background:#dbeafe;color:#1e40af;
+            {% elif v.payment_method == 'cheque' %}background:#fef3c7;color:#92400e;
+            {% elif v.payment_method == 'online' %}background:#f3e8ff;color:#6b21a8;
+            {% else %}background:#f3f4f6;color:#374151;{% endif %}">
+            {% if v.payment_method == 'cash' %}💵{% elif v.payment_method == 'bank' %}🏦{% elif v.payment_method == 'cheque' %}📝{% elif v.payment_method == 'online' %}📱{% else %}🔄{% endif %}
+            {{ v.get_payment_method_display }}
+        </div>
+
+        {% if v.payment_method == 'cash' %}
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            {% if v.received_by %}<div style="background:#f0fdf4;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#166534;font-weight:600;">Received By — کس نے وصول کیا</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.received_by }}</div>
+            </div>{% endif %}
+            {% if v.handed_by %}<div style="background:#f0fdf4;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#166534;font-weight:600;">Handed By — ہماری طرف سے</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.handed_by }}</div>
+            </div>{% endif %}
+            {% if v.receipt_number %}<div style="background:#f0fdf4;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#166534;font-weight:600;">Receipt # — رسید نمبر</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.receipt_number }}</div>
+            </div>{% endif %}
+            {% if v.cash_given_date %}<div style="background:#f0fdf4;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#166534;font-weight:600;">Cash Given On — نقد دیا</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.cash_given_date|date:"d M Y" }}{% if v.cash_given_time %} at {{ v.cash_given_time|time:"h:i A" }}{% endif %}</div>
+            </div>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if v.payment_method == 'bank' or v.payment_method == 'online' %}
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            {% if v.bank_name %}<div style="background:#eff6ff;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#1e40af;font-weight:600;">Our Account — ہمارا اکاؤنٹ</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.bank_name }}</div>
+            </div>{% endif %}
+            {% if v.transaction_ref %}<div style="background:#eff6ff;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#1e40af;font-weight:600;">Reference # — ریفرنس</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.transaction_ref }}</div>
+            </div>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if v.payment_method == 'cheque' %}
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            {% if v.cheque_number %}<div style="background:#fffbeb;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#92400e;font-weight:600;">Cheque # — چیک نمبر</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.cheque_number }}</div>
+            </div>{% endif %}
+            {% if v.cheque_date %}<div style="background:#fffbeb;padding:12px;border-radius:10px;">
+                <div style="font-size:11px;color:#92400e;font-weight:600;">Cheque Date — چیک تاریخ</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px;">{{ v.cheque_date|date:"d M Y" }}</div>
+            </div>{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Recipient Bank Details -->
+        {% if v.recipient_bank_name or v.recipient_account_number %}
+        <div style="margin-top:16px;border-top:1px solid #e5e7eb;padding-top:16px;">
+            <div style="font-size:13px;font-weight:700;color:#6b7280;margin-bottom:12px;">
+                Their Bank Details — ان کے بینک کی تفصیلات
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                {% if v.recipient_bank_name %}<div style="background:#f9fafb;padding:12px;border-radius:10px;">
+                    <div style="font-size:11px;color:#6b7280;">Bank — بینک</div>
+                    <div style="font-size:14px;font-weight:600;margin-top:2px;">{{ v.recipient_bank_name }}</div>
+                </div>{% endif %}
+                {% if v.recipient_account_title %}<div style="background:#f9fafb;padding:12px;border-radius:10px;">
+                    <div style="font-size:11px;color:#6b7280;">Account Title — اکاؤنٹ ٹائٹل</div>
+                    <div style="font-size:14px;font-weight:600;margin-top:2px;">{{ v.recipient_account_title }}</div>
+                </div>{% endif %}
+                {% if v.recipient_account_number %}<div style="background:#f9fafb;padding:12px;border-radius:10px;">
+                    <div style="font-size:11px;color:#6b7280;">Account # — اکاؤنٹ نمبر</div>
+                    <div style="font-size:14px;font-weight:600;font-family:monospace;margin-top:2px;">{{ v.recipient_account_number }}</div>
+                </div>{% endif %}
+                {% if v.recipient_iban %}<div style="background:#f9fafb;padding:12px;border-radius:10px;">
+                    <div style="font-size:11px;color:#6b7280;">IBAN</div>
+                    <div style="font-size:14px;font-weight:600;font-family:monospace;margin-top:2px;">{{ v.recipient_iban }}</div>
+                </div>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Narration -->
+    {% if v.narration %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:#6b7280;margin-bottom:8px;">Description — تفصیل</div>
+        <div style="font-size:14px;color:#374151;line-height:1.6;">{{ v.narration }}</div>
+    </div>
+    {% endif %}
+
+    <!-- STATUS & ACTIONS -->
+    {% if v.status == 'final' %}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{% url 'finance:payment_edit' v.pk %}"
+               style="padding:12px 22px;background:#2563eb;color:white;border-radius:14px;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">
+                ✏️ Edit — ترمیم
+            </a>
+            <a href="{% url 'reports:payment_pdf' v.pk %}" target="_blank"
+               style="padding:12px 22px;background:white;color:#374151;border:2px solid #e2e8f0;border-radius:14px;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px;">
+                📄 Print PDF
+            </a>
+            <form method="post" action="{% url 'finance:payment_void' v.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Cancel this payment?\nParty balance will be reversed.\n\nادائیگی منسوخ کریں؟\nبیلنس واپس ہو جائے گا۔')"
+                        style="padding:12px 22px;background:#fef2f2;color:#dc2626;border:2px solid #fecaca;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    ✗ Cancel — منسوخ
+                </button>
+            </form>
+        </div>
+    </div>
+    {% elif v.status == 'void' %}
+    <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:16px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:20px;">❌</span>
+        <div>
+            <div style="font-size:14px;font-weight:700;color:#991b1b;">Cancelled — منسوخ</div>
+            <div style="font-size:12px;color:#b91c1c;">This payment was cancelled. Balance has been reversed. — ادائیگی منسوخ ہو چکی ہے۔</div>
+        </div>
+    </div>
+    <div style="margin-bottom:16px;">
+        <a href="{% url 'reports:payment_pdf' v.pk %}" target="_blank"
+           style="padding:12px 22px;background:white;color:#374151;border:2px solid #e2e8f0;border-radius:14px;font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+            📄 Print PDF
+        </a>
+    </div>
+    {% elif v.status == 'draft' %}
+    <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:16px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:20px;">⏳</span>
+        <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:#92400e;">Pending — زیر التوا</div>
+            <div style="font-size:12px;color:#a16207;">Not yet recorded. Balance not updated. — ابھی تک ریکارڈ نہیں ہوئی۔</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <form method="post" action="{% url 'finance:payment_finalize' v.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Save this payment now?')"
+                        style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                    ✓ Save Now
+                </button>
+            </form>
+            <a href="{% url 'finance:payment_edit' v.pk %}" style="padding:10px 16px;background:white;color:#374151;border:2px solid #e2e8f0;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;">Edit</a>
+            <form method="post" action="{% url 'finance:payment_void' v.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Delete?')"
+                        style="padding:10px 16px;background:white;color:#dc2626;border:2px solid #fecaca;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Duplicate Warning -->
+    {% if duplicate_warning %}
+    <div style="background:#fef3c7;border:2px solid #fde68a;border-radius:16px;padding:16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:20px;">⚠️</span>
+        <div>
+            <div style="font-size:14px;font-weight:700;color:#92400e;">Possible Duplicate — ممکنہ ڈپلیکیٹ</div>
+            <div style="font-size:13px;color:#a16207;margin-top:4px;">{{ duplicate_warning }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- WhatsApp Share + Back -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="sharePaymentWA()" type="button"
+                style="padding:12px 20px;background:#25D366;color:white;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            📱 WhatsApp Share
+        </button>
+        <script>
+        function sharePaymentWA(){
+            var t='💸 *Payment: {{ v.voucher_number|escapejs }}*\n📅 {{ v.date|date:"d/m/Y" }}\n👤 To: {{ v.party.name|escapejs }}\n💰 Amount: ₨{{ v.amount|floatformat:0 }}\n{{ v.get_payment_method_display|escapejs }}';
+            window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+        }
+        </script>
+        <a href="{% url 'finance:payment_list' %}" style="padding:12px 20px;font-size:14px;font-weight:600;color:#6b7280;background:white;border:2px solid #e5e7eb;border-radius:14px;text-decoration:none;">
+            ← All Payments — تمام ادائیگیاں
+        </a>
+    </div>
+</div>
+{% endblock %}

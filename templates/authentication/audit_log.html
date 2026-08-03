@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Audit Log — سرگرمی ریکارڈ{% endblock %}
+{% block page_title %}Audit Log — سرگرمی ریکارڈ{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center flex-wrap gap-3">
+        <p class="text-sm text-gray-500">Complete history of every action — ہر سرگرمی کا مکمل ریکارڈ</p>
+        <a href="{% url 'authentication:login_history' %}" class="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            🔐 Login History — لاگ ان ہسٹری
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="bg-white rounded-2xl border border-gray-200 p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 items-end">
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Action — عمل</label>
+                <select name="action" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm bg-white focus:border-emerald-500 outline-none">
+                    <option value="">All — تمام</option>
+                    {% for code, label in actions %}
+                    <option value="{{ code }}" {% if selected_action == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Module — ماڈیول</label>
+                <select name="model" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm bg-white focus:border-emerald-500 outline-none">
+                    <option value="">All — تمام</option>
+                    {% for m in models_used %}{% if m %}
+                    <option value="{{ m }}" {% if selected_model == m %}selected{% endif %}>{{ m }}</option>
+                    {% endif %}{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">User — صارف</label>
+                <select name="user" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm bg-white focus:border-emerald-500 outline-none">
+                    <option value="">All — تمام</option>
+                    {% for u in users %}
+                    <option value="{{ u.pk }}" {% if selected_user == u.pk|stringformat:"d" %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">From — سے</label>
+                <input type="date" name="from" value="{{ filter_from }}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">To — تک</label>
+                <input type="date" name="to" value="{{ filter_to }}" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Search — تلاش</label>
+                <input type="text" name="search" value="{{ search }}" placeholder="Search..." class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+                <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold">
+                    🔍 Filter
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Log Table -->
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">When — کب</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Who — کس نے</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action — عمل</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">What — کیا</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Details — تفصیل</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">IP</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for log in logs %}
+                    <tr class="hover:bg-gray-50 {% if log.action == 'DELETE' or log.action == 'LOGIN_FAILED' %}bg-red-50/30{% endif %}">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="font-semibold text-gray-800">{{ log.timestamp|date:"d/m/Y" }}</div>
+                            <div class="text-xs text-gray-400">{{ log.timestamp|time:"h:i:s A" }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if log.user %}
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
+                                    {{ log.user.username|make_list|first|upper }}
+                                </div>
+                                <span class="font-semibold">{{ log.user.get_full_name|default:log.user.username }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold
+                                {% if log.action == 'CREATE' %}bg-emerald-100 text-emerald-700
+                                {% elif log.action == 'UPDATE' %}bg-blue-100 text-blue-700
+                                {% elif log.action == 'DELETE' %}bg-red-100 text-red-700
+                                {% elif log.action == 'LOGIN' %}bg-purple-100 text-purple-700
+                                {% elif log.action == 'LOGOUT' %}bg-gray-100 text-gray-600
+                                {% elif log.action == 'LOGIN_FAILED' %}bg-red-100 text-red-700
+                                {% else %}bg-gray-100 text-gray-500{% endif %}">
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if log.model_name %}<span class="text-xs text-gray-400">{{ log.model_name }}</span><br>{% endif %}
+                            <span class="font-medium text-gray-800">{{ log.object_repr|truncatechars:40 }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500" style="max-width:250px;">
+                            {{ log.description|truncatechars:60 }}
+                        </td>
+                        <td class="px-4 py-3 font-mono text-xs text-gray-400">
+                            {{ log.ip_address|default:"—" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-gray-400">
+                            <div class="text-3xl mb-2">📋</div>
+                            No audit logs found — کوئی ریکارڈ نہیں ملا
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% include "components/pagination.html" %}
+
+    <p class="text-center text-xs text-gray-400 py-2">
+        🔒 Audit logs are immutable — they cannot be deleted or modified<br>
+        آڈٹ لاگ ناقابل تبدیلی ہیں — انہیں حذف یا تبدیل نہیں کیا جا سکتا
+    </p>
+</div>
+{% endblock %}

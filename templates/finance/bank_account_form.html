@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/bank_icons.html" %}
+
+<div style="max-width:600px;margin:0 auto;" x-data="{ selectedBank: '' }">
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+            <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);font-weight:700;color:#1e40af;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:20px;">🏦</span>
+                Select Bank — بینک منتخب کریں
+            </div>
+            <div style="padding:20px;">
+                <!-- Bank Grid with SVG Icons -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+                    {% for code, label in bank_choices %}
+                    <label @click="selectedBank='{{ code }}'; document.querySelector('[name=bank_name]').value='{{ label|cut:' — '|truncatechars:25 }}'"
+                           style="cursor:pointer;">
+                        <input type="radio" name="bank_code" value="{{ code }}" x-model="selectedBank" style="display:none;">
+                        <div :style="selectedBank==='{{ code }}' ? 'border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,0.15)' : 'border-color:#e5e7eb'"
+                             style="border:2px solid #e5e7eb;border-radius:14px;padding:12px 6px;text-align:center;transition:all 0.2s;">
+                            <div style="width:32px;height:32px;margin:0 auto 6px;">
+                                <svg style="width:32px;height:32px;"><use href="#icon-{{ code }}"/></svg>
+                            </div>
+                            <div style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.2;">{{ label|cut:" — "|truncatechars:15 }}</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Owner Type + Party Link -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid #f3f4f6;" x-data="{ ownerType: 'own' }">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Account Owner — مالک</label>
+                        <select name="owner_type" x-model="ownerType"
+                                style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                            <option value="own">Our Account — ہمارا اکاؤنٹ</option>
+                            <option value="party">Party's Account — پارٹی کا اکاؤنٹ</option>
+                        </select>
+                    </div>
+                    <div x-show="ownerType==='party'" style="display:none;" :style="ownerType==='party'?'display:block':'display:none'">
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Link to Party — پارٹی</label>
+                        <select name="party" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                            <option value="">— Select Party —</option>
+                            {% for p in parties %}
+                            <option value="{{ p.pk }}">{{ p.name }} ({{ p.get_party_type_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Account Details -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div style="grid-column:span 2;">
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Bank Name — بینک کا نام <span style="color:#ef4444;">*</span></label>
+                        <input type="text" name="bank_name" required placeholder="Full bank name"
+                               style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Account Number — اکاؤنٹ نمبر <span style="color:#ef4444;">*</span></label>
+                        <input type="text" name="account_number" required placeholder="e.g., 1234567890"
+                               style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;font-family:monospace;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Account Type — قسم</label>
+                        <select name="account_type" style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                            <option value="current">Current — کرنٹ</option>
+                            <option value="savings">Savings — سیونگز</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Branch — برانچ</label>
+                        <input type="text" name="branch" placeholder="Branch name"
+                               style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                    </div>
+                    <div style="grid-column:span 2;">
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">Opening Balance — ابتدائی بیلنس (₨)</label>
+                        <input type="number" name="opening_balance" step="0.01" value="0" placeholder="0"
+                               style="width:100%;padding:14px;border:2px solid #e5e7eb;border-radius:12px;font-size:20px;font-weight:700;text-align:center;outline:none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;">
+            <a href="{% url 'finance:bank_account_list' %}" style="padding:14px 24px;font-size:14px;font-weight:600;color:#6b7280;background:white;border:2px solid #e5e7eb;border-radius:14px;text-decoration:none;">← Back — واپس</a>
+            <button type="submit" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(16,185,129,0.3);">
+                ✓ Save Bank Account — بینک محفوظ
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>setTimeout(function(){if(typeof Alpine==='undefined'){document.querySelectorAll('[x-show]').forEach(function(el){el.style.display='';})}},500);</script>
+{% endblock %}

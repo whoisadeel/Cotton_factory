@@ -1,0 +1,108 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Cash Book{% endblock %}
+{% block page_title %}Cash Book — کیش بک{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<!-- Summary -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#166534;">Cash Received — نقد آمد</div>
+        <div style="font-size:20px;font-weight:800;color:#059669;">₨ {{ receipts_cash|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#991b1b;">Cash Payments — نقد ادائیگی</div>
+        <div style="font-size:20px;font-weight:800;color:#dc2626;">₨ {{ payments_cash|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#92400e;">Cash Expenses — نقد اخراجات</div>
+        <div style="font-size:20px;font-weight:800;color:#d97706;">₨ {{ expenses_cash|floatformat:0|intcomma }}</div>
+    </div>
+    <div style="background:{% if net_cash >= 0 %}linear-gradient(135deg,#059669,#10b981){% else %}linear-gradient(135deg,#dc2626,#ef4444){% endif %};border-radius:14px;padding:14px;text-align:center;color:white;">
+        <div style="font-size:11px;opacity:0.8;">Net Cash — خالص نقدی</div>
+        <div style="font-size:20px;font-weight:900;">₨ {{ net_cash|floatformat:0|intcomma }}</div>
+    </div>
+</div>
+
+<!-- Cash Received -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;font-weight:700;color:#166534;">💰 Cash Received — نقد وصولی ({{ cash_receipts.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Date</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Ref #</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Party — پارٹی</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Narration</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Amount — رقم</th>
+        </tr></thead>
+        <tbody>
+        {% for r in cash_receipts %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/receipts/{{ r.pk }}/'">
+            <td style="padding:8px 14px;">{{ r.date|date:"d/m/Y" }}</td>
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ r.voucher_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ r.party.name }}</td>
+            <td style="padding:8px 14px;color:#6b7280;font-size:12px;">{{ r.narration|truncatechars:40 }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#059669;">₨ {{ r.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="padding:20px;text-align:center;color:#9ca3af;">No cash receipts — کوئی نقد وصولی نہیں</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Cash Payments -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#fef2f2;border-bottom:1px solid #fecaca;font-weight:700;color:#991b1b;">💸 Cash Payments — نقد ادائیگی ({{ cash_payments.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Date</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Ref #</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Party — پارٹی</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Narration</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Amount — رقم</th>
+        </tr></thead>
+        <tbody>
+        {% for p in cash_payments %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/payments/{{ p.pk }}/'">
+            <td style="padding:8px 14px;">{{ p.date|date:"d/m/Y" }}</td>
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ p.voucher_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ p.party.name }}</td>
+            <td style="padding:8px 14px;color:#6b7280;font-size:12px;">{{ p.narration|truncatechars:40 }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#dc2626;">₨ {{ p.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="padding:20px;text-align:center;color:#9ca3af;">No cash payments — کوئی نقد ادائیگی نہیں</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Cash Expenses -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+    <div style="padding:14px 20px;background:#fffbeb;border-bottom:1px solid #fde68a;font-weight:700;color:#92400e;">📝 Cash Expenses — نقد اخراجات ({{ cash_expenses.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Date</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Category — قسم</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Paid To — کسے</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;">Description</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#6b7280;">Amount — رقم</th>
+        </tr></thead>
+        <tbody>
+        {% for e in cash_expenses %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 14px;">{{ e.date|date:"d/m/Y" }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ e.get_category_display }}</td>
+            <td style="padding:8px 14px;">{{ e.paid_to|default:"—" }}</td>
+            <td style="padding:8px 14px;color:#6b7280;font-size:12px;">{{ e.description|truncatechars:40 }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#d97706;">₨ {{ e.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="padding:20px;text-align:center;color:#9ca3af;">No cash expenses — کوئی نقد خرچہ نہیں</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

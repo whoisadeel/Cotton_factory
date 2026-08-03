@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/party_quick_add.html" %}
+{% include "components/quick_add_modal.html" %}
+
+<div style="max-width:640px;margin:0 auto;width:100%;box-sizing:border-box;" x-data="{ direction: 'received' }">
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;overflow:hidden;">
+            <div style="padding:18px 24px;border-bottom:1px solid #e2e8f0;background:#f8fafc;font-weight:700;font-size:16px;color:#0f172a;display:flex;align-items:center;gap:10px;">
+                📝 Cheque Details — چیک کی تفصیل
+            </div>
+            <div style="padding:24px;">
+
+                <!-- Direction selector -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
+                    <label @click="direction='received'"
+                           :style="direction==='received' ? 'background:#dcfce7;border-color:#059669;color:#065f46' : ''"
+                           style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;font-size:15px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="direction" value="received" x-model="direction" style="display:none;" checked>
+                        📥 Received — وصول کیا
+                    </label>
+                    <label @click="direction='issued'"
+                           :style="direction==='issued' ? 'background:#fee2e2;border-color:#dc2626;color:#991b1b' : ''"
+                           style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;font-size:15px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="direction" value="issued" x-model="direction" style="display:none;">
+                        📤 Issued — جاری کیا
+                    </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+                    <!-- Party (with + button) -->
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                            <span x-show="direction==='received'" style="display:none;">Received From — کس سے</span>
+                            <span x-show="direction==='issued'" style="display:none;">Issued To — کسے</span>
+                            <span style="color:#ef4444;">*</span>
+                        </label>
+                        <div style="display:flex;gap:8px;align-items:stretch;">
+                            <select id="sel-cheque-party" name="party" required
+                                    style="flex:1;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;background:white;box-sizing:border-box;transition:border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="">— Select Party —</option>
+                                {% for p in parties %}<option value="{{ p.pk }}">{{ p.name }} ({{ p.get_party_type_display }})</option>{% endfor %}
+                            </select>
+                            <button type="button" onclick="openQuickAdd('supplier','sel-cheque-party')"
+                                    style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                                    title="Add Party — پارٹی شامل کریں">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Date on Cheque -->
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                            Date on Cheque — چیک تاریخ <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="date" name="date_on_cheque" required value="{% now 'Y-m-d' %}"
+                               style="width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                               onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+
+                    <!-- Cheque Number -->
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                            Cheque # — چیک نمبر <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="text" name="cheque_number" required placeholder="e.g., 0012345"
+                               style="width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;font-family:monospace;transition:border-color 0.2s;"
+                               onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+
+                    <!-- Bank on Cheque -->
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                            Bank on Cheque — بینک <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="text" name="bank_name" required placeholder="HBL, MCB, UBL..."
+                               style="width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                               onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div style="margin-top:20px;">
+                    <label style="display:block;font-size:14px;font-weight:700;color:#374151;margin-bottom:8px;text-align:center;">
+                        Amount — رقم <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input type="number" name="amount" step="0.01" required placeholder="0"
+                           style="width:100%;padding:16px;border:2px solid #e2e8f0;border-radius:14px;font-size:28px;font-weight:800;text-align:center;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                           onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Deposit to Account (with + button) -->
+                <div style="margin-top:20px;">
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">
+                        Deposit to Account — جمع اکاؤنٹ
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <select id="sel-cheque-bank" name="bank_account"
+                                style="flex:1;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;background:white;box-sizing:border-box;transition:border-color 0.2s;"
+                                onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'">
+                            <option value="">— Select Account (Optional) —</option>
+                            {% for ba in bank_accounts %}<option value="{{ ba.pk }}">{{ ba.bank_name }} — {{ ba.account_number }}</option>{% endfor %}
+                        </select>
+                        <button type="button"
+                                onclick="openGenericQuickAdd('Add Bank Account — بینک اکاؤنٹ شامل کریں', '/finance/api/bank-account-quick-add/', 'sel-cheque-bank')"
+                                style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                                title="Add Bank Account — بینک اکاؤنٹ شامل کریں">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div style="margin-top:20px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Notes — نوٹس</label>
+                    <textarea name="notes" rows="2" placeholder="Optional notes..."
+                              style="width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box;transition:border-color 0.2s;"
+                              onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:space-between;">
+            <a href="{% url 'finance:cheque_list' %}"
+               style="padding:14px 24px;font-size:14px;font-weight:600;color:#475569;background:white;border:2px solid #e2e8f0;border-radius:14px;text-decoration:none;">
+                ← Back — واپس
+            </a>
+            <button type="submit"
+                    style="padding:14px 32px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.25);transition:box-shadow 0.15s;"
+                    onmouseover="this.style.boxShadow='0 6px 20px rgba(16,185,129,0.35)'"
+                    onmouseout="this.style.boxShadow='0 4px 14px rgba(16,185,129,0.25)'">
+                ✓ Save Cheque — چیک محفوظ کریں
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

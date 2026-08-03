@@ -1,0 +1,21 @@
+{% load form_tags %}
+{% comment %}
+Breadcrumb navigation. Usage:
+  {% include "components/breadcrumb.html" with crumbs="Purchases:/purchases/,PUR-2607-0001" %}
+  {% include "components/breadcrumb.html" with crumbs="Finance:/finance/payments/,Payments:/finance/payments/,PAY-2607-0001" %}
+{% endcomment %}
+<nav class="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
+    <a href="/dashboard/" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    </a>
+    {% for crumb in crumbs|default:""|split:"," %}
+        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        {% with parts=crumb|split:":" %}
+            {% if parts.1 %}
+                <a href="{{ parts.1 }}" class="text-gray-400 hover:text-gray-600">{{ parts.0 }}</a>
+            {% else %}
+                <span class="text-gray-700 font-medium">{{ parts.0 }}</span>
+            {% endif %}
+        {% endwith %}
+    {% endfor %}
+</nav>

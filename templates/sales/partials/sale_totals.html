@@ -1,0 +1,28 @@
+{% load humanize %}
+<div style="display:flex;justify-content:flex-end;">
+    <div style="width:100%;max-width:340px;font-size:14px;">
+        {% if sale.sales_tax_amount or sale.wht_amount or sale.commission_amount or sale.bardana_charges or sale.hamali_charges or sale.freight_charges or sale.tulai_charges or sale.other_charges %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#6b7280;">Subtotal (ذیلی کل)</span><span style="font-weight:500;">₨ {{ sale.subtotal|floatformat:0|intcomma }}</span></div>
+        {% if sale.bardana_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Bardana (بردانہ)</span><span>₨ {{ sale.bardana_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.commission_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Commission {% if sale.commission_pct %}({{ sale.commission_pct }}%){% endif %}</span><span>₨ {{ sale.commission_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.hamali_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Hamali (حمالی)</span><span>₨ {{ sale.hamali_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.tulai_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Tulai (تلائی)</span><span>₨ {{ sale.tulai_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.freight_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Freight (بھاڑا)</span><span>₨ {{ sale.freight_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.other_charges %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#9ca3af;">+ Other (دیگر)</span><span>₨ {{ sale.other_charges|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.sales_tax_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#d97706;">+ Sales Tax {% if sale.sales_tax_pct %}({{ sale.sales_tax_pct }}%){% endif %}</span><span style="color:#d97706;">₨ {{ sale.sales_tax_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.wht_amount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#dc2626;">+ WHT {% if sale.wht_pct %}({{ sale.wht_pct }}%){% endif %}</span><span style="color:#dc2626;">₨ {{ sale.wht_amount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% if sale.total_discount %}<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span style="color:#ef4444;">− Discount (رعایت)</span><span style="color:#ef4444;">₨ {{ sale.total_discount|floatformat:0|intcomma }}</span></div>{% endif %}
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #e5e7eb;margin-top:4px;font-weight:800;font-size:16px;">
+            <span style="color:#374151;">Grand Total (کل رقم)</span>
+            <span style="color:#059669;">₨ {{ sale.grand_total|floatformat:0|intcomma }}</span>
+        </div>
+        {% if sale.amount_received %}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#6b7280;">Received (وصولی)</span><span style="color:#059669;">₨ {{ sale.amount_received|floatformat:0|intcomma }}</span></div>
+        {% endif %}
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:#fef2f2;border-radius:10px;margin-top:4px;font-weight:800;font-size:16px;">
+            <span style="color:#dc2626;">Balance Due (بقایا)</span>
+            <span style="color:#dc2626;">₨ {{ sale.balance_due|floatformat:0|intcomma }}</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ party.name }}{% endblock %}
+{% block page_title %}{{ party.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:0 auto;width:100%;box-sizing:border-box;" class="space-y-4">
+
+    <!-- Breadcrumb -->
+    <div style="font-size:13px;color:#6b7280;">
+        <a href="{% url 'parties:party_list' %}" style="color:#059669;text-decoration:none;">← Parties</a>
+        <span style="margin:0 6px;">›</span> {{ party.name }}
+    </div>
+
+    <!-- Header Card -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+        <div>
+            <h2 style="font-size:22px;font-weight:800;color:#1e293b;">{{ party.name }}</h2>
+            {% if party.name_urdu %}<p style="font-size:16px;color:#6b7280;" dir="rtl">{{ party.name_urdu }}</p>{% endif %}
+            {% if party.company_name %}<p style="font-size:14px;color:#6b7280;">{{ party.company_name }}</p>{% endif %}
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                <span style="padding:4px 12px;border-radius:16px;font-size:12px;font-weight:600;
+                    {% if party.party_type == 'supplier' %}background:#dbeafe;color:#1e40af;
+                    {% elif party.party_type == 'customer' %}background:#f3e8ff;color:#6b21a8;
+                    {% elif party.party_type == 'broker' %}background:#fef3c7;color:#92400e;
+                    {% else %}background:#f3f4f6;color:#374151;{% endif %}">
+                    {{ party.get_party_type_display }}
+                </span>
+                <span style="padding:4px 12px;border-radius:16px;font-size:12px;font-weight:500;background:#f3f4f6;color:#6b7280;">{{ party.code }}</span>
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <p style="font-size:12px;color:#6b7280;">Current Balance — موجودہ بیلنس</p>
+            <p style="font-size:28px;font-weight:800;{% if party.current_balance > 0 %}color:#059669;{% elif party.current_balance < 0 %}color:#dc2626;{% else %}color:#6b7280;{% endif %}">
+                {{ party.balance_display }}
+            </p>
+            {% if party.current_balance > 0 %}<p style="font-size:12px;color:#059669;">Receivable — وصول شدنی</p>
+            {% elif party.current_balance < 0 %}<p style="font-size:12px;color:#dc2626;">Payable — واجب الادا</p>{% endif %}
+        </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Contact — رابطہ</p>
+            <p style="font-size:14px;font-weight:600;">{{ party.phone_primary|default:"—" }}</p>
+            {% if party.whatsapp %}<p style="font-size:12px;color:#6b7280;">WhatsApp: {{ party.whatsapp }}</p>{% endif %}
+            {% if party.email %}<p style="font-size:12px;color:#6b7280;">{{ party.email }}</p>{% endif %}
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Location — مقام</p>
+            <p style="font-size:14px;font-weight:600;">{{ party.city|default:"—" }}</p>
+            {% if party.district %}<p style="font-size:12px;color:#6b7280;">{{ party.district }}, {{ party.get_province_display|default:"" }}</p>{% endif %}
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Identity — شناخت</p>
+            <p style="font-size:14px;font-weight:600;">{{ party.cnic|default:"—" }}</p>
+            {% if party.ntn_number %}<p style="font-size:12px;color:#6b7280;">NTN: {{ party.ntn_number }}</p>{% endif %}
+            <p style="font-size:12px;color:#6b7280;">Filer: {% if party.is_filer %}Yes ✓{% else %}No{% endif %}</p>
+        </div>
+    </div>
+
+    <!-- ═══ THIS YEAR'S BUSINESS STATS ═══ -->
+    {% if stats %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:14px;">📊 This Year's Business — اس سال کا کاروبار</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+            {% if stats.purchases_count > 0 %}
+            <div style="background:#fff7ed;border-radius:12px;padding:14px;text-align:center;">
+                <div style="font-size:11px;color:#c2410c;font-weight:600;">Purchases — خریداری</div>
+                <div style="font-size:18px;font-weight:800;color:#ea580c;margin-top:4px;">₨ {{ stats.purchases_total|floatformat:0|intcomma }}</div>
+                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">{{ stats.purchases_count }} entries</div>
+                {% if stats.last_purchase %}<div style="font-size:10px;color:#9ca3af;">Last: {{ stats.last_purchase|date:"d/m/Y" }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if stats.sales_count > 0 %}
+            <div style="background:#eff6ff;border-radius:12px;padding:14px;text-align:center;">
+                <div style="font-size:11px;color:#1e40af;font-weight:600;">Sales — فروخت</div>
+                <div style="font-size:18px;font-weight:800;color:#2563eb;margin-top:4px;">₨ {{ stats.sales_total|floatformat:0|intcomma }}</div>
+                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">{{ stats.sales_count }} entries</div>
+                {% if stats.last_sale %}<div style="font-size:10px;color:#9ca3af;">Last: {{ stats.last_sale|date:"d/m/Y" }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if stats.payments_total > 0 %}
+            <div style="background:#fef2f2;border-radius:12px;padding:14px;text-align:center;">
+                <div style="font-size:11px;color:#991b1b;font-weight:600;">Payments — ادائیگیاں</div>
+                <div style="font-size:18px;font-weight:800;color:#dc2626;margin-top:4px;">₨ {{ stats.payments_total|floatformat:0|intcomma }}</div>
+                {% if stats.last_payment %}<div style="font-size:10px;color:#9ca3af;">Last: {{ stats.last_payment|date:"d/m/Y" }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if stats.receipts_total > 0 %}
+            <div style="background:#f0fdf4;border-radius:12px;padding:14px;text-align:center;">
+                <div style="font-size:11px;color:#166534;font-weight:600;">Receipts — وصولیاں</div>
+                <div style="font-size:18px;font-weight:800;color:#059669;margin-top:4px;">₨ {{ stats.receipts_total|floatformat:0|intcomma }}</div>
+                {% if stats.last_receipt %}<div style="font-size:10px;color:#9ca3af;">Last: {{ stats.last_receipt|date:"d/m/Y" }}</div>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ QUICK ACTIONS ═══ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:12px;">Quick Actions — فوری اقدامات</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="{% url 'parties:party_edit' party.pk %}" style="padding:10px 18px;background:#059669;color:white;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">✏️ Edit — ترمیم</a>
+            {% if party.party_type == 'supplier' or party.party_type == 'both' %}
+            <a href="{% url 'finance:payment_create' %}?party={{ party.pk }}" style="padding:10px 18px;background:#dc2626;color:white;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">💸 Pay — ادائیگی</a>
+            <a href="{% url 'purchases:purchase_create' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:flex;align-items:center;gap:6px;">🛒 New Purchase</a>
+            {% endif %}
+            {% if party.party_type == 'customer' or party.party_type == 'both' %}
+            <a href="{% url 'finance:receipt_create' %}?party={{ party.pk }}" style="padding:10px 18px;background:#059669;color:white;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">💰 Receive — وصولی</a>
+            <a href="{% url 'sales:sale_create' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:flex;align-items:center;gap:6px;">📋 New Sale</a>
+            {% endif %}
+            <a href="{% url 'reports:party_ledger_detail' party.pk %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:flex;align-items:center;gap:6px;">📊 Full Ledger</a>
+            <a href="{% url 'reports:statement_pdf' party.pk %}" target="_blank" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;display:flex;align-items:center;gap:6px;">📄 PDF Statement</a>
+            <button onclick="sharePartyWhatsApp()" type="button" style="padding:10px 18px;background:#25D366;color:white;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">📱 WhatsApp</button>
+        </div>
+    </div>
+
+    <!-- ═══ LINKED BANK ACCOUNTS ═══ -->
+    {% if stats.bank_accounts %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">🏦 Bank Accounts — بینک اکاؤنٹس</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            {% for ba in stats.bank_accounts %}
+            <div style="background:#f8fafc;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;">
+                <div style="font-size:24px;">🏦</div>
+                <div>
+                    <div style="font-size:14px;font-weight:700;color:#1e293b;">{{ ba.bank_name }}</div>
+                    <div style="font-size:13px;color:#6b7280;font-family:monospace;">{{ ba.account_number }}</div>
+                    {% if ba.branch %}<div style="font-size:12px;color:#9ca3af;">{{ ba.branch }}</div>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ CROSS-PARTY ADJUSTMENTS ═══ -->
+    {% if stats.adjustments %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">🔄 Cross-Party Adjustments — کراس پارٹی ایڈجسٹمنٹ</div>
+        {% for adj in stats.adjustments %}
+        <div style="background:#f5f3ff;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div>
+                <a href="{% url 'finance:adjustment_detail' adj.pk %}" style="font-size:13px;font-weight:600;color:#5b21b6;text-decoration:none;">{{ adj.voucher_number }}</a>
+                <span style="font-size:12px;color:#7c3aed;margin-left:8px;">{{ adj.from_party.name }} → {{ adj.to_party.name }}</span>
+                <span style="font-size:11px;color:#9ca3af;margin-left:6px;">{{ adj.date|date:"d/m/Y" }}</span>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:#7c3aed;">₨ {{ adj.amount|floatformat:0|intcomma }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Recent Transactions (Inline Ledger) -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+            <span>Recent Transactions — حالیہ لین دین</span>
+            <a href="{% url 'reports:party_ledger_detail' party.pk %}" style="padding:4px 14px;background:#dcfce7;color:#166534;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">View All →</a>
+        </div>
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f9fafb;">
+                    <th style="padding:8px 16px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Date</th>
+                    <th style="padding:8px 16px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Type</th>
+                    <th style="padding:8px 16px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;">Reference</th>
+                    <th style="padding:8px 16px;text-align:right;font-size:11px;color:#6b7280;text-transform:uppercase;">Debit</th>
+                    <th style="padding:8px 16px;text-align:right;font-size:11px;color:#6b7280;text-transform:uppercase;">Credit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr style="border-bottom:1px solid #f3f4f6;{% if t.url %}cursor:pointer;{% endif %}" {% if t.url %}onclick="window.location='{{ t.url }}'"{% endif %}>
+                    <td style="padding:8px 16px;">{{ t.date|date:"d/m/Y" }}</td>
+                    <td style="padding:8px 16px;">
+                        <span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;
+                            {% if t.type == 'Purchase' %}background:#fff7ed;color:#c2410c;
+                            {% elif t.type == 'Sale' %}background:#eff6ff;color:#1d4ed8;
+                            {% elif t.type == 'Payment' %}background:#fef2f2;color:#dc2626;
+                            {% else %}background:#f0fdf4;color:#059669;{% endif %}">{{ t.type }}</span>
+                    </td>
+                    <td style="padding:8px 16px;font-family:monospace;font-size:12px;color:#6b7280;">{{ t.ref }}</td>
+                    <td style="padding:8px 16px;text-align:right;{% if t.debit %}font-weight:600;{% endif %}">{% if t.debit %}₨ {{ t.debit|floatformat:0|intcomma }}{% endif %}</td>
+                    <td style="padding:8px 16px;text-align:right;{% if t.credit %}font-weight:600;{% endif %}">{% if t.credit %}₨ {{ t.credit|floatformat:0|intcomma }}{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="padding:30px;text-align:center;color:#9ca3af;">No transactions yet — ابھی کوئی لین دین نہیں</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Credit Info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;">Credit Limit</p>
+            <p style="font-size:18px;font-weight:700;color:#1e293b;">₨ {{ party.credit_limit|floatformat:0|intcomma }}</p>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;">Credit Days</p>
+            <p style="font-size:18px;font-weight:700;color:#1e293b;">{{ party.credit_days }} days</p>
+        </div>
+        {% if party.commission_rate %}
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;text-transform:uppercase;">Commission</p>
+            <p style="font-size:18px;font-weight:700;color:#1e293b;">{{ party.commission_rate }}%</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function sharePartyWhatsApp() {
+    var bal = {{ party.current_balance|floatformat:0 }};
+    var balText = bal > 0 ? 'Receivable: ₨' + Math.abs(bal).toLocaleString() : (bal < 0 ? 'Payable: ₨' + Math.abs(bal).toLocaleString() : 'Balance: ₨0');
+    var text = '👤 *{{ party.name|escapejs }}*\n'
+        + '📊 ' + balText + '\n'
+        + '📱 {{ party.phone_primary|default:""|escapejs }}\n'
+        + '📍 {{ party.city|default:""|escapejs }}';
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+</script>
+{% endblock %}

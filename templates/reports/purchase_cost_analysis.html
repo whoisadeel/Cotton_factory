@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Cost Calculator{% endblock %}
+{% block page_title %}Purchase Cost Calculator — خریداری لاگت حساب{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:12px;">
+    <a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a>
+</div>
+
+<!-- ═══ FILTERS ═══ -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+    <h3 style="font-weight:700;color:#374151;margin-bottom:14px;font-size:15px;">
+        🔍 Filter Purchases — خریداریاں فلٹر کریں
+    </h3>
+    <form method="get">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;">
+            <!-- Product OR Category -->
+            <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">Product — پروڈکٹ</label>
+                <select name="product" style="width:100%;padding:9px 10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:white;">
+                    <option value="">— All Products —</option>
+                    {% for p in products %}
+                    <option value="{{ p.pk }}" {% if selected_product == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">Or Category — یا زمرہ</label>
+                <select name="category" style="width:100%;padding:9px 10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:white;">
+                    <option value="">— All —</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"d" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">From — سے</label>
+                <input type="date" name="from" value="{{ from_date|date:'Y-m-d' }}" style="width:100%;padding:9px 8px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">To — تک</label>
+                <input type="date" name="to" value="{{ to_date|date:'Y-m-d' }}" style="width:100%;padding:9px 8px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">Show Per — فی</label>
+                <select name="unit" style="width:100%;padding:9px 10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:white;">
+                    {% for u in units %}
+                    <option value="{{ u.abbreviation }}" {% if display_unit == u.abbreviation %}selected{% endif %}>
+                        {{ u.name }}{% if u.conversion_to_base and u.conversion_to_base != 1 %} ({{ u.conversion_to_base|floatformat:0 }}kg){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" style="padding:9px 20px;background:#059669;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;height:40px;">
+                    Load — لائیں
+                </button>
+            </div>
+        </div>
+        <!-- Supplier filter + date presets -->
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select name="supplier" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;background:white;">
+                <option value="">All Suppliers — سب سپلائر</option>
+                {% for s in suppliers %}
+                <option value="{{ s.pk }}" {% if selected_supplier == s.pk|stringformat:"d" %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+            <span style="color:#d1d5db;">|</span>
+            {% now "Y-m-d" as today_iso %}
+            {% now "Y" as yr %}
+            {% now "m" as mo %}
+            <a href="?product={{ selected_product }}&category={{ selected_category }}&from={{ today_iso }}&to={{ today_iso }}&unit={{ display_unit }}&supplier={{ selected_supplier }}" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">Today</a>
+            <a href="?product={{ selected_product }}&category={{ selected_category }}&from={{ yr }}-{{ mo }}-01&to={{ today_iso }}&unit={{ display_unit }}&supplier={{ selected_supplier }}" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Month</a>
+            <a href="?product={{ selected_product }}&category={{ selected_category }}&from={{ yr }}-01-01&to={{ today_iso }}&unit={{ display_unit }}&supplier={{ selected_supplier }}" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Year</a>
+        </div>
+    </form>
+</div>
+
+{% if has_filter %}
+<!-- ═══ INTERACTIVE TABLE — Alpine.js handles check/uncheck + live calculation ═══ -->
+<div x-data="costCalc()" x-init="init()">
+
+    <!-- Summary Cards (live-updating) -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Selected — منتخب</div>
+            <div style="font-size:22px;font-weight:800;color:#2563eb;" x-text="selectedCount + ' / ' + rows.length"></div>
+            <div style="font-size:11px;color:#9ca3af;" x-text="supplierCount + ' supplier(s)'"></div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Total Weight — کل وزن</div>
+            <div style="font-size:22px;font-weight:800;color:#7c3aed;" x-text="totalWeightDisp.toFixed(2) + ' {{ disp_unit_abbr }}'"></div>
+            <div style="font-size:11px;color:#9ca3af;" x-text="totalWeightKg.toFixed(0) + ' KG'"></div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Total Cost — کل لاگت</div>
+            <div style="font-size:22px;font-weight:800;color:#059669;" x-text="'₨ ' + formatNum(totalCost)"></div>
+            <div style="font-size:11px;color:#9ca3af;">incl. charges — اخراجات سمیت</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#059669,#10b981);border-radius:16px;padding:14px;text-align:center;color:white;">
+            <div style="font-size:11px;opacity:0.8;">Avg Cost / {{ disp_unit_abbr }} — فی {{ disp_unit_abbr }} لاگت</div>
+            <div style="font-size:26px;font-weight:900;" x-text="'₨ ' + avgCostPerUnit.toFixed(2)"></div>
+            <div style="font-size:11px;opacity:0.7;" x-text="'Base: ₨ ' + avgBaseCostPerUnit.toFixed(2) + '/{{ disp_unit_abbr }}'"></div>
+        </div>
+    </div>
+
+    <!-- Select All / None buttons -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button @click="selectAll()" type="button" style="padding:6px 14px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
+            ✓ Select All — سب منتخب
+        </button>
+        <button @click="selectNone()" type="button" style="padding:6px 14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
+            ✗ Clear All — سب ہٹائیں
+        </button>
+        <span style="font-size:12px;color:#9ca3af;display:flex;align-items:center;margin-left:8px;">Click checkboxes to include/exclude — شامل/خارج کرنے کے لیے ✓ دبائیں</span>
+    </div>
+
+    <!-- Table -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="overflow-x:auto;">
+            <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                    <tr>
+                        <th style="padding:10px 8px;text-align:center;width:40px;">✓</th>
+                        <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Date</th>
+                        <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Purchase #</th>
+                        <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Supplier — سپلائر</th>
+                        <th style="padding:10px 8px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Product</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Qty</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">{{ disp_unit_abbr }}</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Rate</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Base Cost</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#d97706;">+ Charges</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#059669;">All-in</th>
+                        <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;color:#059669;background:#f0fdf4;">/ {{ disp_unit_abbr }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(row, idx) in rows" :key="row.id">
+                        <tr :style="row.selected ? 'border-bottom:1px solid #f3f4f6;' : 'border-bottom:1px solid #f3f4f6;background:#f9fafb;opacity:0.5;'"
+                            @click="toggle(idx)" style="cursor:pointer;">
+                            <td style="padding:8px;text-align:center;">
+                                <input type="checkbox" :checked="row.selected" @click.stop="toggle(idx)"
+                                       style="width:18px;height:18px;accent-color:#059669;cursor:pointer;">
+                            </td>
+                            <td style="padding:8px;white-space:nowrap;" x-text="row.date_display"></td>
+                            <td style="padding:8px;font-family:monospace;font-size:11px;" x-text="row.purchase_number"></td>
+                            <td style="padding:8px;font-weight:500;" x-text="row.supplier"></td>
+                            <td style="padding:8px;font-size:12px;" x-text="row.product"></td>
+                            <td style="padding:8px;text-align:right;" x-text="row.qty.toFixed(2) + ' ' + row.unit"></td>
+                            <td style="padding:8px;text-align:right;font-weight:600;" x-text="row.weight_disp.toFixed(2)"></td>
+                            <td style="padding:8px;text-align:right;" x-text="'₨' + formatNum(row.rate)"></td>
+                            <td style="padding:8px;text-align:right;" x-text="'₨' + formatNum(row.base_cost)"></td>
+                            <td style="padding:8px;text-align:right;color:#d97706;" x-text="'₨' + formatNum(row.extra)"></td>
+                            <td style="padding:8px;text-align:right;font-weight:600;" x-text="'₨' + formatNum(row.all_in)"></td>
+                            <td style="padding:8px;text-align:right;font-weight:700;color:#059669;background:#f0fdf4;"
+                                x-text="row.weight_disp > 0 ? '₨' + (row.all_in / row.weight_disp).toFixed(2) : '—'"></td>
+                        </tr>
+                    </template>
+                </tbody>
+                <tfoot x-show="selectedCount > 0" style="background:#f0fdf4;border-top:2px solid #059669;">
+                    <tr style="font-weight:700;font-size:14px;">
+                        <td colspan="6" style="padding:12px;text-align:right;color:#166534;">SELECTED TOTALS — منتخب کا حساب:</td>
+                        <td style="padding:12px;text-align:right;color:#7c3aed;" x-text="totalWeightDisp.toFixed(2)"></td>
+                        <td style="padding:12px;"></td>
+                        <td style="padding:12px;text-align:right;" x-text="'₨' + formatNum(totalBaseCost)"></td>
+                        <td style="padding:12px;text-align:right;color:#d97706;" x-text="'₨' + formatNum(totalExtra)"></td>
+                        <td style="padding:12px;text-align:right;" x-text="'₨' + formatNum(totalCost)"></td>
+                        <td style="padding:12px;text-align:right;font-size:16px;color:#059669;background:#dcfce7;"
+                            x-text="'₨' + avgCostPerUnit.toFixed(2)"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div x-show="rows.length === 0" style="display:none;padding:40px;text-align:center;color:#9ca3af;" :style="rows.length === 0 ? 'display:block;padding:40px;text-align:center;color:#9ca3af;' : 'display:none;'">
+            No purchases found for this filter. Try a different product, category, or date range.<br>
+            اس فلٹر کے لیے کوئی خریداری نہیں ملی۔
+        </div>
+    </div>
+</div>
+
+<script>
+function costCalc() {
+    return {
+        rows: [],
+        init() {
+            // Load data from Django (injected as JSON)
+            this.rows = {{ purchase_rows_json|safe }}.map(r => ({...r, selected: true}));
+        },
+        toggle(idx) { this.rows[idx].selected = !this.rows[idx].selected; },
+        selectAll() { this.rows.forEach(r => r.selected = true); },
+        selectNone() { this.rows.forEach(r => r.selected = false); },
+        get selected() { return this.rows.filter(r => r.selected); },
+        get selectedCount() { return this.selected.length; },
+        get supplierCount() { return new Set(this.selected.map(r => r.supplier)).size; },
+        get totalWeightKg() { return this.selected.reduce((s,r) => s + r.weight_kg, 0); },
+        get totalWeightDisp() { return this.selected.reduce((s,r) => s + r.weight_disp, 0); },
+        get totalBaseCost() { return this.selected.reduce((s,r) => s + r.base_cost, 0); },
+        get totalExtra() { return this.selected.reduce((s,r) => s + r.extra, 0); },
+        get totalCost() { return this.selected.reduce((s,r) => s + r.all_in, 0); },
+        get avgCostPerUnit() { return this.totalWeightDisp > 0 ? this.totalCost / this.totalWeightDisp : 0; },
+        get avgBaseCostPerUnit() { return this.totalWeightDisp > 0 ? this.totalBaseCost / this.totalWeightDisp : 0; },
+        formatNum(n) { return Math.round(n).toLocaleString(); },
+    };
+}
+</script>
+
+{% else %}
+<!-- No filter selected yet -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:40px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">📊</div>
+    <h3 style="font-weight:700;color:#374151;margin-bottom:8px;">Select a Product or Category — پروڈکٹ یا زمرہ منتخب کریں</h3>
+    <p style="color:#9ca3af;font-size:14px;max-width:500px;margin:0 auto;">
+        Choose a product (or category to see all products in it), set a date range, and click "Load".<br>
+        Then check ✓ or uncheck individual purchases to calculate cost per KG/Maund.<br><br>
+        پروڈکٹ یا زمرہ منتخب کریں، تاریخ لگائیں، اور "لائیں" دبائیں۔<br>
+        پھر ✓ لگا کر یا ہٹا کر فی کلو/من لاگت دیکھیں۔
+    </p>
+</div>
+{% endif %}
+{% endblock %}

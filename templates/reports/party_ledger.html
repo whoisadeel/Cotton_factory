@@ -1,0 +1,170 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Party Ledger{% endblock %}
+{% block page_title %}Party Ledger — پارٹی لیجر{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+
+<!-- Party Selector + Date Filter -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;">
+        <div style="flex:1;min-width:200px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">Party — پارٹی</label>
+            <select onchange="if(this.value) window.location='/reports/party-ledger/'+this.value+'/?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}'"
+                    style="width:100%;padding:8px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:white;">
+                <option value="">— Select Party — پارٹی منتخب کریں —</option>
+                {% for p in all_parties %}
+                <option value="{{ p.pk }}" {% if party and party.pk == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.get_party_type_display }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if party %}
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <a href="/reports/party-ledger/{{ party.pk }}/?from={{ today_iso }}&to={{ today_iso }}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">Today</a>
+            <a href="/reports/party-ledger/{{ party.pk }}/?from={{ week_start }}&to={{ today_iso }}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Week</a>
+            <a href="/reports/party-ledger/{{ party.pk }}/?from={{ month_start }}&to={{ today_iso }}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Month</a>
+            <a href="/reports/party-ledger/{{ party.pk }}/?from={{ fy_start }}&to={{ today_iso }}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This FY</a>
+            <a href="/reports/party-ledger/{{ party.pk }}/?from={{ year_start }}&to={{ today_iso }}"
+               style="padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;text-decoration:none;color:#374151;background:white;">This Year</a>
+        </div>
+        <form method="get" action="/reports/party-ledger/{{ party.pk }}/" style="display:flex;gap:6px;align-items:center;">
+            <input type="date" name="from" value="{{ filter_from|date:'Y-m-d' }}" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+            <input type="date" name="to" value="{{ filter_to|date:'Y-m-d' }}" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;">
+            <button type="submit" style="padding:6px 16px;background:#059669;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Filter</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if party %}
+<!-- Party Info + Actions -->
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <a href="{% url 'reports:statement_pdf' party.pk %}" target="_blank" style="padding:6px 14px;background:white;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;color:#374151;">📄 PDF Statement</a>
+        <button onclick="var t='📊 *{{ party.name|escapejs }}*%0ABalance: ₨{{ party.current_balance|floatformat:0 }}';window.open('https://wa.me/?text='+t,'_blank')" type="button" style="padding:6px 14px;background:#25D366;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📱 WhatsApp</button>
+        <a href="{% url 'settings_app:data_export' %}?type=parties" style="padding:6px 14px;background:white;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;color:#374151;">Export CSV</a>
+    </div>
+</div>
+<!-- Party Header with Balance -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+            <div style="font-size:20px;font-weight:800;color:#1e293b;">{{ party.name }}</div>
+            <span style="padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;
+                {% if party.party_type == 'supplier' %}background:#dbeafe;color:#1e40af;
+                {% elif party.party_type == 'customer' %}background:#f3e8ff;color:#6b21a8;
+                {% else %}background:#f3f4f6;color:#374151;{% endif %}">{{ party.get_party_type_display }}</span>
+            {% if party.phone_primary %}<span style="margin-left:8px;font-size:13px;color:#6b7280;">📱 {{ party.phone_primary }}</span>{% endif %}
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:12px;color:#6b7280;">Current Balance — موجودہ بیلنس</div>
+            <div style="font-size:28px;font-weight:900;{% if party.current_balance > 0 %}color:#059669;{% elif party.current_balance < 0 %}color:#dc2626;{% else %}color:#6b7280;{% endif %}">
+                ₨ {{ party.current_balance|floatformat:0|intcomma }}
+            </div>
+            {% if party.current_balance > 0 %}<div style="font-size:12px;color:#059669;font-weight:600;">Receivable — وصول شدنی</div>
+            {% elif party.current_balance < 0 %}<div style="font-size:12px;color:#dc2626;font-weight:600;">Payable — واجب الادا</div>
+            {% else %}<div style="font-size:12px;color:#6b7280;">All clear — سب برابر</div>{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards — How much owed, paid, remaining -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+    {% if total_purchases %}
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:10px;color:#c2410c;font-weight:600;">Purchases — خریداری</div>
+        <div style="font-size:18px;font-weight:800;color:#ea580c;">₨ {{ total_purchases|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">What we bought</div>
+    </div>
+    {% endif %}
+    {% if total_sales %}
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:10px;color:#1e40af;font-weight:600;">Sales — فروخت</div>
+        <div style="font-size:18px;font-weight:800;color:#2563eb;">₨ {{ total_sales|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">What they bought</div>
+    </div>
+    {% endif %}
+    {% if total_paid %}
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:10px;color:#991b1b;font-weight:600;">Paid Out — ادائیگیاں</div>
+        <div style="font-size:18px;font-weight:800;color:#dc2626;">₨ {{ total_paid|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">ان کو دی گئی ادائیگی</div>
+    </div>
+    {% endif %}
+    {% if total_received %}
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;text-align:center;">
+        <div style="font-size:10px;color:#166534;font-weight:600;">Received In — وصولیاں</div>
+        <div style="font-size:18px;font-weight:800;color:#059669;">₨ {{ total_received|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">ان سے وصول شدہ</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Totals Bar -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:12px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div>
+        <span style="font-size:13px;color:#6b7280;">Total Debit — کل ڈیبٹ:</span>
+        <span style="font-size:15px;font-weight:800;color:#374151;margin-left:6px;">₨ {{ total_debit|floatformat:0|intcomma }}</span>
+    </div>
+    <div>
+        <span style="font-size:13px;color:#6b7280;">Total Credit — کل کریڈٹ:</span>
+        <span style="font-size:15px;font-weight:800;color:#374151;margin-left:6px;">₨ {{ total_credit|floatformat:0|intcomma }}</span>
+    </div>
+    <div>
+        <span style="font-size:13px;color:#6b7280;">Closing Balance — اختتامی:</span>
+        <span style="font-size:15px;font-weight:900;margin-left:6px;{% if party.current_balance > 0 %}color:#059669;{% elif party.current_balance < 0 %}color:#dc2626;{% else %}color:#6b7280;{% endif %}">
+            ₨ {{ party.current_balance|floatformat:0|intcomma }}
+        </span>
+    </div>
+</div>
+
+<!-- Ledger Table -->
+<div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Type</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Reference</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">Description</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500">Debit</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500">Credit</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500">Balance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for e in entries %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">{{ e.date }}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 text-xs rounded-full
+                            {% if e.type == 'Purchase' %}bg-orange-100 text-orange-700
+                            {% elif e.type == 'Sale' %}bg-blue-100 text-blue-700
+                            {% elif e.type == 'Payment' %}bg-red-100 text-red-700
+                            {% elif e.type == 'Receipt' %}bg-emerald-100 text-emerald-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">{{ e.type }}</span>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-gray-500 text-xs">{{ e.ref }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-xs">{{ e.desc }}</td>
+                    <td class="px-4 py-3 text-right {% if e.debit %}font-medium{% endif %}">{% if e.debit %}₨ {{ e.debit|floatformat:0|intcomma }}{% endif %}</td>
+                    <td class="px-4 py-3 text-right {% if e.credit %}font-medium{% endif %}">{% if e.credit %}₨ {{ e.credit|floatformat:0|intcomma }}{% endif %}</td>
+                    <td class="px-4 py-3 text-right font-bold {% if e.balance > 0 %}text-emerald-600{% elif e.balance < 0 %}text-red-600{% endif %}">₨ {{ e.balance|floatformat:0|intcomma }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No transactions — کوئی لین دین نہیں</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-2xl border shadow-sm p-12 text-center">
+    <div style="font-size:48px;margin-bottom:12px;">📋</div>
+    <h3 class="font-bold text-gray-700">Select a Party above — اوپر سے پارٹی منتخب کریں</h3>
+</div>
+{% endif %}
+{% endblock %}

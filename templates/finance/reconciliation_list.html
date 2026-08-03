@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Bank Reconciliation{% endblock %}
+{% block page_title %}Bank Reconciliation — بینک مطابقت{% endblock %}
+{% block content %}
+<div class="space-y-4 animate-fadeIn">
+<div class="flex justify-end">
+    <a href="{% url 'finance:reconciliation_create' %}" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700">+ New Reconciliation</a>
+</div>
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-gray-50 border-b"><tr>
+    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Bank</th>
+    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Statement</th>
+    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">System</th>
+    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Difference</th>
+    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+</tr></thead>
+<tbody class="divide-y divide-gray-100">
+{% for item in reconciliations %}
+<tr class="hover:bg-gray-50">
+    <td class="px-4 py-3">{{ item.date|date:"d/m/Y" }}</td>
+    <td class="px-4 py-3 font-medium">{{ item.bank_account.bank_name }}</td>
+    <td class="px-4 py-3 text-right">₨ {{ item.statement_balance|floatformat:0|intcomma }}</td>
+    <td class="px-4 py-3 text-right">₨ {{ item.system_balance|floatformat:0|intcomma }}</td>
+    <td class="px-4 py-3 text-right font-bold {% if item.difference == 0 %}text-emerald-600{% else %}text-red-600{% endif %}">₨ {{ item.difference|floatformat:0|intcomma }}</td>
+    <td class="px-4 py-3 text-center">{% if item.is_reconciled %}<span class="px-2 py-0.5 text-xs bg-emerald-100 text-emerald-700 rounded-full">Matched ✓</span>{% else %}<span class="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">Unmatched</span>{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="px-4 py-12 text-center text-gray-400">No reconciliations yet</td></tr>
+{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

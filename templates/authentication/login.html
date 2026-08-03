@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Cotton Factory</title>
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
+    <script defer src="{% static 'js/alpine.min.js' %}"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-emerald-900 via-gray-900 to-emerald-950 flex items-center justify-center p-4"
+      x-data="{ showPass: false }" x-cloak>
+
+    <!-- Decorative blurs -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="w-full max-w-md relative z-10">
+
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl flex items-center justify-center mb-5 shadow-2xl shadow-emerald-500/30 -rotate-6">
+                <svg class="w-10 h-10 text-white rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold text-white">Cotton Factory</h1>
+            <p class="text-emerald-300/70 mt-1 text-sm">Management System — کاٹن فیکٹری</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/20 p-8 border border-white/20">
+
+            {% if timeout %}
+            <div class="mb-5 p-4 bg-amber-50 border-2 border-amber-200 rounded-2xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-sm text-amber-700 font-medium">Session expired — دوبارہ لاگ ان کریں</span>
+            </div>
+            {% endif %}
+
+            {% if lockout_msg %}
+            <div class="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-2xl flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="text-sm text-red-700 font-medium">{{ lockout_msg }}</p>
+            </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <div class="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-2xl flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    {% for error in form.non_field_errors %}
+                    <p class="text-sm text-red-700 font-medium">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'authentication:login' %}">
+                {% csrf_token %}
+                <div class="space-y-5">
+                    <div>
+                        <label for="id_username" class="block text-sm font-bold text-gray-700 mb-2">
+                            Username <span class="text-gray-400 font-normal text-xs">(صارف نام)</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </span>
+                            <input type="text" name="username" id="id_username" autofocus required
+                                   value="{{ form.username.value|default:'' }}"
+                                   class="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
+                                   placeholder="Enter your username">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="id_password" class="block text-sm font-bold text-gray-700 mb-2">
+                            Password <span class="text-gray-400 font-normal text-xs">(پاس ورڈ)</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            </span>
+                            <input :type="showPass ? 'text' : 'password'" name="password" id="id_password" required
+                                   class="w-full pl-12 pr-12 py-3.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none"
+                                   placeholder="Enter your password">
+                            <button type="button" @click="showPass = !showPass"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <svg x-show="!showPass" style="display:inline;" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <svg x-show="showPass" style="display:none;" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember_me" class="w-4 h-4 text-emerald-600 rounded border-2 border-gray-300 focus:ring-emerald-500">
+                        <span class="text-sm text-gray-600">Remember me — مجھے یاد رکھیں</span>
+                    </label>
+
+                    <button type="submit"
+                            class="w-full py-3.5 font-bold text-white rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                        Sign In — لاگ ان کریں
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <p class="text-center text-xs text-emerald-300/40 mt-6">Cotton Factory Management System &copy; {% now "Y" %}</p>
+    </div>
+</body>
+</html>

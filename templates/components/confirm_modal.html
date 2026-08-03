@@ -1,0 +1,49 @@
+<!-- Reusable confirmation modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:white;border-radius:16px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 40px rgba(0,0,0,0.2);text-align:center;">
+        <div id="confirm-icon-wrap" style="width:56px;height:56px;background:#fef2f2;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg id="confirm-icon" style="width:28px;height:28px;color:#dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h3 id="confirm-title" style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px;">Are you sure?</h3>
+        <p id="confirm-message" style="font-size:14px;color:#6b7280;margin-bottom:4px;">This action cannot be undone.</p>
+        <p id="confirm-message-ur" style="font-size:13px;color:#9ca3af;margin-bottom:20px;">کیا آپ واقعی یہ کرنا چاہتے ہیں؟</p>
+        <div style="display:flex;gap:10px;justify-content:center;">
+            <button onclick="document.getElementById('confirm-modal').style.display='none'"
+                    style="padding:10px 24px;background:#f3f4f6;color:#374151;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">
+                Cancel — منسوخ
+            </button>
+            <button id="confirm-action-btn" onclick="document.getElementById('confirm-form').submit()"
+                    style="padding:10px 24px;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                Confirm
+            </button>
+        </div>
+        <form id="confirm-form" method="post" style="display:none;">
+            <input type="hidden" name="csrfmiddlewaretoken" value="">
+        </form>
+    </div>
+</div>
+
+<script>
+function showConfirm(title, message, actionUrl, csrfToken, btnText, color) {
+    document.getElementById('confirm-title').textContent = title || 'Are you sure?';
+    document.getElementById('confirm-message').textContent = message || 'This action cannot be undone.';
+    document.getElementById('confirm-form').action = actionUrl;
+    document.getElementById('confirm-form').querySelector('input[name=csrfmiddlewaretoken]').value = csrfToken;
+    var btn = document.getElementById('confirm-action-btn');
+    btn.textContent = btnText || 'Confirm';
+    var iconWrap = document.getElementById('confirm-icon-wrap');
+    if (color === 'green') {
+        btn.style.background = 'linear-gradient(135deg,#059669,#10b981)';
+        iconWrap.style.background = '#ecfdf5';
+        document.getElementById('confirm-icon').style.color = '#059669';
+    } else {
+        btn.style.background = 'linear-gradient(135deg,#dc2626,#ef4444)';
+        iconWrap.style.background = '#fef2f2';
+        document.getElementById('confirm-icon').style.color = '#dc2626';
+    }
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+</script>

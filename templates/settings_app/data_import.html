@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Import / Export Data{% endblock %}
+{% block page_title %}Import / Export Data — ڈیٹا درآمد / برآمد{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;margin:0 auto;width:100%;box-sizing:border-box;" class="space-y-5">
+
+    <div style="font-size:13px;color:#6b7280;">
+        <a href="{% url 'settings_app:index' %}" style="color:#059669;text-decoration:none;">← Settings — ترتیبات</a>
+    </div>
+
+    <!-- ═══════════════ WARNING ═══════════════ -->
+    <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:16px;padding:16px 20px;">
+        <div style="font-size:14px;font-weight:700;color:#991b1b;margin-bottom:6px;">⚠️ CSV is NOT for full backup/restore — CSV مکمل بیک اپ کے لیے نہیں ہے</div>
+        <div style="font-size:13px;color:#991b1b;line-height:1.6;">
+            CSV import is for <strong>adding new data</strong> (e.g. bulk-adding parties from Excel).
+            It does <strong>NOT</strong> create stock movements, journals, or payment statuses.<br>
+            For full backup &amp; restore, use <strong><a href="{% url 'settings_app:backup' %}" style="color:#1e40af;text-decoration:underline;">💾 Database Backup (SQLite)</a></strong> — it preserves everything perfectly.
+            <br><br>
+            CSV درآمد صرف نیا ڈیٹا شامل کرنے کے لیے ہے۔ مکمل بیک اپ کے لیے <strong>💾 ڈیٹا بیس بیک اپ</strong> استعمال کریں۔
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- EXPORT SECTION                      -->
+    <!-- ═══════════════════════════════════ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);font-weight:700;color:#1e40af;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">📤</span>
+            Export Data as CSV — CSV میں ڈیٹا برآمد
+        </div>
+        <div style="padding:20px;">
+            <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+                Download your data as CSV files to view in Excel or share with others.
+                <br>اپنا ڈیٹا CSV فائل میں ڈاؤنلوڈ کریں — ایکسل میں دیکھیں یا دوسروں کو بھیجیں۔
+            </p>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+                {% for type, icon, label, label_ur, color in export_types %}
+                <a href="{% url 'settings_app:data_export' %}?type={{ type }}"
+                   style="padding:14px;background:{{ color }};border-radius:12px;text-decoration:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    <span style="font-size:22px;">{{ icon }}</span>
+                    <span style="font-size:13px;font-weight:700;color:#1e293b;">{{ label }}</span>
+                    <span style="font-size:11px;color:#6b7280;">{{ label_ur }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Full Backup link -->
+            <a href="{% url 'settings_app:backup' %}"
+               style="display:block;padding:14px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;border-radius:14px;text-align:center;text-decoration:none;font-size:14px;font-weight:700;">
+                💾 Full Database Backup & Restore — مکمل بیک اپ
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- IMPORT SECTION                      -->
+    <!-- ═══════════════════════════════════ -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f0fdf4,#dcfce7);font-weight:700;color:#166534;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">📥</span>
+            Import New Data — نیا ڈیٹا درآمد کریں
+        </div>
+        <div style="padding:20px;">
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:#92400e;">
+                <strong>ℹ️ Use this to add NEW data</strong> (e.g. import a list of parties from Excel).
+                This will NOT overwrite or delete existing data — it only adds new records or updates existing ones by name/code.
+                <br>یہ نیا ڈیٹا شامل کرنے کے لیے ہے — پرانا ڈیٹا نہیں مٹے گا۔
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Step 1: Select what to import -->
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">
+                        1. What to Import — کیا درآمد کرنا ہے
+                    </label>
+                    <select name="import_type" id="import-type-select"
+                            style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;background:white;">
+                        <option value="units">📏 Units — اکائیاں (KG, Maund, Bale, etc.)</option>
+                        <option value="categories">📁 Categories — زمرے</option>
+                        <option value="parties" selected>👥 Parties — پارٹیاں (Suppliers, Customers)</option>
+                        <option value="products">📦 Products — مصنوعات</option>
+                        <option value="bank_accounts">🏦 Bank Accounts — بینک اکاؤنٹس</option>
+                        <option value="purchases">🛒 Purchases — خریداری (records only)</option>
+                        <option value="sales">📋 Sales — فروخت (records only)</option>
+                        <option value="payments">💸 Payments — ادائیگیاں (records only)</option>
+                        <option value="receipts">💰 Receipts — وصولیاں (records only)</option>
+                        <option value="expenses">📝 Expenses — اخراجات</option>
+                        <option value="cheques">📝 Cheques — چیک</option>
+                    </select>
+                </div>
+
+                <!-- Step 2: Upload file -->
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">
+                        2. Select CSV File — CSV فائل منتخب کریں
+                    </label>
+                    <input type="file" name="csv_file" accept=".csv,.txt" required
+                           style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;">
+                </div>
+
+                <!-- CSV Format Help -->
+                <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:16px;"
+                     x-data="{showHelp: false}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="font-size:13px;font-weight:600;color:#92400e;">📋 CSV Column Format</div>
+                        <button type="button" @click="showHelp=!showHelp"
+                                style="padding:4px 12px;background:white;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#92400e;cursor:pointer;">
+                            <span x-text="showHelp ? 'Hide' : 'Show Columns'"></span>
+                        </button>
+                    </div>
+                    <div x-show="showHelp" style="display:none;" :style="showHelp ? 'display:block' : 'display:none'">
+                        <div style="margin-top:12px;font-size:12px;color:#92400e;line-height:2;font-family:monospace;">
+                            <strong>Units:</strong> abbreviation, name, name_urdu, conversion_to_base, unit_type<br>
+                            <strong>Categories:</strong> code, name, name_urdu<br>
+                            <strong>Parties:</strong> code, name, name_urdu, type, phone, whatsapp, city, current_balance, credit_limit, credit_days<br>
+                            <strong>Products:</strong> name, code, category, unit, current_stock, minimum_stock, source<br>
+                            <strong>Bank Accounts:</strong> bank_name, account_number, account_type, branch, opening_balance, current_balance<br>
+                            <strong>Purchases:</strong> date, purchase_number, supplier, product, quantity, unit, rate, amount, grand_total<br>
+                            <strong>Sales:</strong> date, invoice_number, customer, product, quantity, unit, rate, amount, grand_total<br>
+                            <strong>Payments:</strong> date, voucher_number, party_name, amount, method, bank_name, narration<br>
+                            <strong>Receipts:</strong> date, voucher_number, party_name, amount, method, bank_name, narration<br>
+                            <strong>Expenses:</strong> date, category, amount, paid_to, method, description<br>
+                            <strong>Cheques:</strong> cheque_number, date_on_cheque, party, amount, direction, bank_name, status
+                        </div>
+                        <div style="margin-top:8px;font-size:12px;color:#a16207;">
+                            💡 First row must be column headers. Dates in YYYY-MM-DD format. Amounts without commas.<br>
+                            پہلی قطار میں کالم کے نام ہونے چاہئیں۔ تاریخ YYYY-MM-DD میں۔ رقم بغیر کاما کے۔
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;">
+                    📥 Import — درآمد کریں
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}

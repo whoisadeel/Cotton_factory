@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Chart of Accounts{% endblock %}
+{% block page_title %}Chart of Accounts — چارٹ آف اکاؤنٹس{% endblock %}
+{% block content %}
+<div class="space-y-4 animate-fadeIn">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="{% url 'accounting:journal_list' %}" style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;text-decoration:none;color:#374151;background:white;">Journals — جرنل</a>
+            <a href="{% url 'accounting:balance_sheet' %}" style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;text-decoration:none;color:#374151;background:white;">Balance Sheet</a>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <a href="{% url 'accounting:group_create' %}" style="padding:10px 18px;background:white;border:2px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;color:#374151;">+ Add Group — گروپ</a>
+            <a href="{% url 'accounting:account_create' %}" style="padding:10px 18px;background:#059669;color:white;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;">+ Add Account — اکاؤنٹ</a>
+        </div>
+    </div>
+
+    <!-- Help -->
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;font-size:13px;color:#1e40af;line-height:1.6;">
+        💡 <strong>How it works:</strong> Accounts are auto-created by <code>seed_accounts</code>. Every purchase, sale, payment, receipt, and expense auto-creates journal entries. You only need to add accounts or journals for special cases.
+        <br><span style="font-size:12px;color:#3b82f6;">اکاؤنٹس خودکار بنتے ہیں۔ ہر خریداری، فروخت، ادائیگی خودکار جرنل بناتی ہے۔ صرف خاص حالات میں اکاؤنٹ یا جرنل دستی بنائیں۔</span>
+    </div>
+
+    {% for g in groups %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:14px 20px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <span style="font-weight:700;color:#374151;">{{ g.code }} — {{ g.name }}</span>
+                <span style="font-size:12px;color:#6b7280;margin-left:8px;">({{ g.get_group_type_display }})</span>
+            </div>
+            <span style="font-size:12px;color:#9ca3af;">{{ g.accounts.count }} accounts</span>
+        </div>
+        {% if g.accounts.all %}
+        <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tbody>
+            {% for a in g.accounts.all %}
+            <tr style="border-bottom:1px solid #f3f4f6;">
+                <td style="padding:8px 20px;font-family:monospace;color:#6b7280;width:80px;">{{ a.code }}</td>
+                <td style="padding:8px 10px;font-weight:600;">
+                    <a href="{% url 'accounting:account_ledger' a.pk %}" style="color:#059669;text-decoration:none;">{{ a.name }}</a>
+                    {% if a.name_urdu %}<span style="font-size:11px;color:#9ca3af;margin-left:6px;">{{ a.name_urdu }}</span>{% endif %}
+                </td>
+                <td style="padding:8px 20px;text-align:right;font-weight:700;
+                    {% if a.current_balance > 0 %}color:#059669;{% elif a.current_balance < 0 %}color:#dc2626;{% else %}color:#9ca3af;{% endif %}">
+                    ₨ {{ a.current_balance|floatformat:0|intcomma }}
+                </td>
+                <td style="padding:8px 14px;text-align:right;width:60px;">
+                    <a href="{% url 'accounting:account_edit' a.pk %}" style="padding:2px 8px;background:#f3f4f6;color:#374151;border-radius:6px;font-size:11px;text-decoration:none;">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding:16px 20px;color:#9ca3af;font-size:13px;">No accounts in this group</div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:40px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:12px;">📊</div>
+        <div style="font-size:16px;font-weight:700;color:#374151;">No accounts configured yet</div>
+        <div style="font-size:14px;color:#9ca3af;margin-top:4px;">Run <code>python manage.py seed_accounts</code> to create default accounts</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

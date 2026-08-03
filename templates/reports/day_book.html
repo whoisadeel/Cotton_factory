@@ -1,0 +1,146 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Day Book — {{ day|date:"d/m/Y" }}{% endblock %}
+{% block page_title %}Day Book — روزنامچہ{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+
+<!-- Date Picker -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px;">
+    <form method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <label style="font-size:13px;font-weight:700;color:#374151;">Date — تاریخ:</label>
+        <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" style="padding:8px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;">
+        <button type="submit" style="padding:8px 20px;background:#059669;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">Show — دکھائیں</button>
+        <span style="font-size:14px;font-weight:700;color:#374151;margin-left:8px;">{{ day|date:"l, d F Y" }}</span>
+    </form>
+</div>
+
+<!-- Summary -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:#c2410c;font-weight:600;">Purchases — خریداری</div>
+        <div style="font-size:16px;font-weight:800;color:#ea580c;">₨ {{ total_purchases|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">{{ purchases.count }} entries</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:#1e40af;font-weight:600;">Sales — فروخت</div>
+        <div style="font-size:16px;font-weight:800;color:#2563eb;">₨ {{ total_sales|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">{{ sales.count }} entries</div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:#166534;font-weight:600;">Receipts — وصولی</div>
+        <div style="font-size:16px;font-weight:800;color:#059669;">₨ {{ total_receipts|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">{{ receipts.count }} entries</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:#991b1b;font-weight:600;">Payments — ادائیگی</div>
+        <div style="font-size:16px;font-weight:800;color:#dc2626;">₨ {{ total_payments|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">{{ payments.count }} entries</div>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:10px;color:#92400e;font-weight:600;">Expenses — اخراجات</div>
+        <div style="font-size:16px;font-weight:800;color:#d97706;">₨ {{ total_expenses|floatformat:0|intcomma }}</div>
+        <div style="font-size:10px;color:#9ca3af;">{{ expenses.count }} entries</div>
+    </div>
+</div>
+
+<!-- Purchases -->
+{% if purchases %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:12px 16px;background:#fff7ed;border-bottom:1px solid #fed7aa;font-weight:700;color:#c2410c;font-size:14px;">🛒 Purchases — خریداری ({{ purchases.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tbody>
+        {% for p in purchases %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/purchases/{{ p.pk }}/'">
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ p.purchase_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ p.supplier.name }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#ea580c;">₨ {{ p.grand_total|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Sales -->
+{% if sales %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:12px 16px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-weight:700;color:#1e40af;font-size:14px;">📋 Sales — فروخت ({{ sales.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tbody>
+        {% for s in sales %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/sales/{{ s.pk }}/'">
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ s.invoice_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ s.customer.name }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#2563eb;">₨ {{ s.grand_total|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Receipts -->
+{% if receipts %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:12px 16px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;font-weight:700;color:#166534;font-size:14px;">💰 Receipts — وصولی ({{ receipts.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tbody>
+        {% for v in receipts %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/receipts/{{ v.pk }}/'">
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ v.voucher_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ v.party.name }}</td>
+            <td style="padding:8px 14px;font-size:12px;color:#6b7280;">{{ v.get_payment_method_display }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#059669;">₨ {{ v.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Payments -->
+{% if payments %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:12px 16px;background:#fef2f2;border-bottom:1px solid #fecaca;font-weight:700;color:#991b1b;font-size:14px;">💸 Payments — ادائیگی ({{ payments.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tbody>
+        {% for v in payments %}
+        <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/payments/{{ v.pk }}/'">
+            <td style="padding:8px 14px;font-family:monospace;font-size:11px;color:#6b7280;">{{ v.voucher_number }}</td>
+            <td style="padding:8px 14px;font-weight:600;">{{ v.party.name }}</td>
+            <td style="padding:8px 14px;font-size:12px;color:#6b7280;">{{ v.get_payment_method_display }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#dc2626;">₨ {{ v.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Expenses -->
+{% if expenses %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+    <div style="padding:12px 16px;background:#fffbeb;border-bottom:1px solid #fde68a;font-weight:700;color:#92400e;font-size:14px;">📝 Expenses — اخراجات ({{ expenses.count }})</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tbody>
+        {% for e in expenses %}
+        <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 14px;font-weight:600;">{{ e.get_category_display }}</td>
+            <td style="padding:8px 14px;color:#6b7280;">{{ e.paid_to|default:"—" }}</td>
+            <td style="padding:8px 14px;font-size:12px;color:#6b7280;">{{ e.get_payment_method_display }}</td>
+            <td style="padding:8px 14px;text-align:right;font-weight:700;color:#d97706;">₨ {{ e.amount|floatformat:0|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if not purchases and not sales and not payments and not receipts and not expenses %}
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:40px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">📅</div>
+    <div style="font-size:16px;font-weight:700;color:#374151;">No transactions on {{ day|date:"d M Y" }}</div>
+    <div style="font-size:14px;color:#9ca3af;margin-top:4px;">اس تاریخ کو کوئی لین دین نہیں</div>
+</div>
+{% endif %}
+{% endblock %}

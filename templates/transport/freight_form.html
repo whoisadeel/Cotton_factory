@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% include "components/party_quick_add.html" %}
+<div class="max-w-2xl mx-auto animate-fadeIn" style="max-width:600px;margin:0 auto;"
+     x-data="{ rateType: '{{ form.rate_type.value|default:'per_trip' }}' }">
+
+    {% if form.errors %}
+    <div style="margin-bottom:20px;border:2px solid #fecaca;background:#fef2f2;padding:16px;border-radius:16px;">
+        <h3 style="font-weight:700;color:#991b1b;">Please fix errors — غلطیاں درست کریں</h3>
+        {% for field_name, errors in form.errors.items %}
+        <p style="color:#b91c1c;font-size:13px;">• {{ form.fields|get_label:field_name }}: {% for e in errors %}{{ e }}{% endfor %}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Freight Details — بھاڑے کی تفصیل
+            </div>
+            <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>{% render_field form.date %}</div>
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Transporter — ٹرانسپورٹر <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:stretch;">
+                        <select id="sel-freight-transporter" name="transporter" style="flex:1;"
+                                class="px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 outline-none bg-white">
+                            <option value="">— Select — منتخب کریں —</option>
+                            {% for t in form.transporter.field.queryset %}
+                            <option value="{{ t.pk }}" {% if form.transporter.value|stringformat:"d" == t.pk|stringformat:"d" %}selected{% endif %}>
+                                {{ t.name }}{% if t.city %} — {{ t.city }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" onclick="openQuickAdd('transporter','sel-freight-transporter')"
+                            style="width:44px;min-width:44px;height:44px;background:#059669;color:white;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                            title="Add Transporter — ٹرانسپورٹر شامل کریں">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                    </div>
+                </div>
+                <div>{% render_field form.vehicle %}</div>
+                <div></div>
+                <div>{% render_field form.from_location %}</div>
+                <div>{% render_field form.to_location %}</div>
+            </div>
+        </div>
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-weight:700;">
+                Rate — نرخ
+            </div>
+            <div style="padding:20px;">
+                <!-- Rate Type Selector -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+                    <label @click="rateType='per_trip'" :style="rateType==='per_trip' ? 'background:#d1fae5;border-color:#059669;color:#065f46' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="rate_type" value="per_trip" x-model="rateType" style="display:none;" {% if form.rate_type.value == 'per_trip' or not form.rate_type.value %}checked{% endif %}>
+                        Per Trip — فی ٹرپ
+                    </label>
+                    <label @click="rateType='per_maund'" :style="rateType==='per_maund' ? 'background:#dbeafe;border-color:#2563eb;color:#1e40af' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="rate_type" value="per_maund" x-model="rateType" style="display:none;" {% if form.rate_type.value == 'per_maund' %}checked{% endif %}>
+                        Per Maund — فی من
+                    </label>
+                    <label @click="rateType='per_km'" :style="rateType==='per_km' ? 'background:#fef3c7;border-color:#d97706;color:#92400e' : ''"
+                           style="padding:12px;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all 0.15s;">
+                        <input type="radio" name="rate_type" value="per_km" x-model="rateType" style="display:none;" {% if form.rate_type.value == 'per_km' %}checked{% endif %}>
+                        Per KM — فی کلومیٹر
+                    </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <label style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">
+                            Rate (₨) — <span x-text="rateType==='per_trip' ? 'per trip' : rateType==='per_maund' ? 'per Maund' : 'per KM'"></span>
+                        </label>
+                        {{ form.rate }}
+                    </div>
+                    <div x-show="rateType !== 'per_trip'" x-transition style="display:none;">
+                        <label style="display:block;font-size:14px;font-weight:600;margin-bottom:6px;">
+                            <span x-text="rateType==='per_maund' ? 'Quantity (Maund) — مقدار' : 'Distance (KM) — فاصلہ'"></span>
+                        </label>
+                        {{ form.quantity }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:20px;">{% render_field form.narration "full" %}</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;">
+            <a href="{{ back_url|default:'/transport/freight/' }}" style="padding:10px 20px;font-size:14px;font-weight:600;color:#4b5563;background:white;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;">← Back</a>
+            <button type="submit" style="padding:12px 28px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+                Save Freight — بھاڑا محفوظ
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>setTimeout(function(){if(typeof Alpine==='undefined'){document.querySelectorAll('[x-show]').forEach(function(el){el.style.display='';});}},500);</script>
+{% endblock %}

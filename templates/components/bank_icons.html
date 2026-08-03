@@ -1,0 +1,209 @@
+{# Pakistani Bank SVG Icons — fully offline, inline SVG badges #}
+<style>
+.bank-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:800; letter-spacing:0.3px; }
+
+/* Bank icon container */
+.bank-icon { 
+    width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:900; letter-spacing:-0.5px; flex-shrink:0; overflow:hidden;
+}
+.bank-icon svg { width:100%; height:100%; }
+
+/* Legacy color-only fallbacks */
+.bank-hbl   { background:#004B2D; color:#FFD700; }
+.bank-mcb   { background:#003366; color:white; }
+.bank-ubl   { background:#FF6600; color:white; }
+.bank-abli  { background:#8B0000; color:white; }
+.bank-abl   { background:#8B0000; color:white; }
+.bank-nbp   { background:#1B5E20; color:white; }
+.bank-mzn   { background:#0D47A1; color:white; }
+.bank-meezan{ background:#0D47A1; color:white; }
+.bank-std   { background:#0072CE; color:white; }
+.bank-standard{ background:#0072CE; color:white; }
+.bank-fys   { background:#2E7D32; color:white; }
+.bank-faysal{ background:#2E7D32; color:white; }
+.bank-bok   { background:#4A148C; color:white; }
+.bank-bop   { background:#1565C0; color:white; }
+.bank-askari{ background:#B71C1C; color:white; }
+.bank-soneri{ background:#FF8F00; color:white; }
+.bank-habib_metro{ background:#003366; color:#FFD700; }
+.bank-summit{ background:#1A237E; color:white; }
+.bank-js    { background:#E65100; color:white; }
+.bank-jaz   { background:#E31837; color:white; }
+.bank-ep    { background:#4CAF50; color:white; }
+.bank-spk   { background:#FF5722; color:white; }
+.bank-nps   { background:#7B1FA2; color:white; }
+.bank-other { background:#607D8B; color:white; }
+</style>
+
+{# Inline SVG definitions — each bank gets a recognizable mini-logo #}
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- HBL: Green shield with gold star -->
+    <symbol id="icon-hbl" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#004B2D"/>
+      <path d="M16 5 L26 12 L26 22 L16 28 L6 22 L6 12 Z" fill="#006838" stroke="#FFD700" stroke-width="1"/>
+      <polygon points="16,9 17.5,14 22,14 18.5,17 19.8,22 16,19 12.2,22 13.5,17 10,14 14.5,14" fill="#FFD700"/>
+    </symbol>
+
+    <!-- MCB: Navy with gold 'M' lettermark -->
+    <symbol id="icon-mcb" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#003366"/>
+      <text x="16" y="22" text-anchor="middle" font-size="16" font-weight="900" font-family="Arial,sans-serif" fill="#FFD700">M</text>
+      <rect x="5" y="24" width="22" height="2" rx="1" fill="#FFD700"/>
+    </symbol>
+
+    <!-- UBL: Orange circle with white 'U' -->
+    <symbol id="icon-ubl" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#FF6600"/>
+      <circle cx="16" cy="15" r="9" fill="white" opacity="0.2"/>
+      <text x="16" y="21" text-anchor="middle" font-size="15" font-weight="900" font-family="Arial,sans-serif" fill="white">U</text>
+      <rect x="8" y="24" width="16" height="2" rx="1" fill="white" opacity="0.6"/>
+    </symbol>
+
+    <!-- ABL: Maroon with gold eagle wing motif -->
+    <symbol id="icon-abl" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#8B0000"/>
+      <path d="M16 6 L22 14 L28 12 L24 18 L28 24 L20 20 L16 28 L12 20 L4 24 L8 18 L4 12 L10 14 Z" fill="#FFD700" opacity="0.9"/>
+      <circle cx="16" cy="16" r="4" fill="#8B0000"/>
+      <text x="16" y="19" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="#FFD700">ABL</text>
+    </symbol>
+
+    <!-- NBP: Green with crescent and star -->
+    <symbol id="icon-nbp" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#1B5E20"/>
+      <circle cx="14" cy="16" r="8" fill="none" stroke="white" stroke-width="2"/>
+      <circle cx="17" cy="16" r="6" fill="#1B5E20"/>
+      <polygon points="22,11 22.8,13 25,13 23.2,14.5 23.8,16.5 22,15.2 20.2,16.5 20.8,14.5 19,13 21.2,13" fill="white"/>
+    </symbol>
+
+    <!-- Meezan: Islamic blue with crescent -->
+    <symbol id="icon-meezan" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#0D47A1"/>
+      <path d="M10 25 L10 10 L12 10 L12 25 Z" fill="#FFD700"/>
+      <path d="M12 10 L22 10 L22 12 L14 12 L14 16 L20 16 L20 18 L14 18 L14 25 L12 25 Z" fill="#FFD700" opacity="0"/>
+      <circle cx="18" cy="14" r="6" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+      <circle cx="20" cy="14" r="4.5" fill="#0D47A1"/>
+      <polygon points="24,10 24.5,11.5 26,11.5 24.8,12.5 25.3,14 24,13 22.7,14 23.2,12.5 22,11.5 23.5,11.5" fill="#FFD700"/>
+      <text x="16" y="26" text-anchor="middle" font-size="5" font-weight="700" font-family="Arial,sans-serif" fill="#FFD700">MEEZAN</text>
+    </symbol>
+
+    <!-- Standard Chartered: Blue with SC monogram -->
+    <symbol id="icon-standard" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#0072CE"/>
+      <circle cx="16" cy="15" r="10" fill="none" stroke="white" stroke-width="1.5"/>
+      <text x="16" y="19" text-anchor="middle" font-size="10" font-weight="900" font-family="Arial,sans-serif" fill="white">SC</text>
+      <rect x="6" y="26" width="20" height="1.5" rx="0.75" fill="white" opacity="0.5"/>
+    </symbol>
+
+    <!-- Faysal: Green with gold F -->
+    <symbol id="icon-faysal" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#2E7D32"/>
+      <text x="16" y="22" text-anchor="middle" font-size="18" font-weight="900" font-family="Georgia,serif" fill="#FFD700">F</text>
+      <rect x="6" y="24" width="20" height="2" rx="1" fill="#FFD700" opacity="0.5"/>
+    </symbol>
+
+    <!-- Bank of Punjab: Blue shield -->
+    <symbol id="icon-bop" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#1565C0"/>
+      <path d="M16 5 L24 10 L24 20 L16 27 L8 20 L8 10 Z" fill="white" opacity="0.15"/>
+      <text x="16" y="18" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="white">BoP</text>
+      <text x="16" y="24" text-anchor="middle" font-size="4" font-weight="600" font-family="Arial,sans-serif" fill="white" opacity="0.7">PUNJAB</text>
+    </symbol>
+
+    <!-- Bank of Khyber: Purple with tribal motif -->
+    <symbol id="icon-bok" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#4A148C"/>
+      <text x="16" y="18" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="white">BoK</text>
+      <path d="M8 23 L12 21 L16 23 L20 21 L24 23" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+    </symbol>
+
+    <!-- Askari: Red with military star -->
+    <symbol id="icon-askari" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#B71C1C"/>
+      <polygon points="16,6 18,12 24,12 19,16 21,22 16,18 11,22 13,16 8,12 14,12" fill="#FFD700" opacity="0.9"/>
+      <circle cx="16" cy="14" r="3" fill="#B71C1C"/>
+      <text x="16" y="16" text-anchor="middle" font-size="4" font-weight="900" font-family="Arial,sans-serif" fill="#FFD700">A</text>
+    </symbol>
+
+    <!-- Soneri: Gold/amber with 'S' -->
+    <symbol id="icon-soneri" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#FF8F00"/>
+      <circle cx="16" cy="15" r="9" fill="white" opacity="0.2"/>
+      <text x="16" y="21" text-anchor="middle" font-size="16" font-weight="900" font-family="Georgia,serif" fill="white">S</text>
+    </symbol>
+
+    <!-- Habib Metro: Navy with HM monogram -->
+    <symbol id="icon-habib_metro" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#003366"/>
+      <text x="16" y="19" text-anchor="middle" font-size="10" font-weight="900" font-family="Arial,sans-serif" fill="#FFD700">HM</text>
+      <rect x="7" y="22" width="18" height="1.5" rx="0.75" fill="#FFD700" opacity="0.6"/>
+      <rect x="7" y="8" width="18" height="1.5" rx="0.75" fill="#FFD700" opacity="0.6"/>
+    </symbol>
+
+    <!-- Summit: Dark blue -->
+    <symbol id="icon-summit" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#1A237E"/>
+      <path d="M8 24 L16 8 L24 24 Z" fill="none" stroke="white" stroke-width="2"/>
+      <path d="M12 20 L16 12 L20 20 Z" fill="white" opacity="0.3"/>
+      <text x="16" y="28" text-anchor="middle" font-size="4.5" font-weight="700" font-family="Arial,sans-serif" fill="white">SUMMIT</text>
+    </symbol>
+
+    <!-- JS Bank: Orange -->
+    <symbol id="icon-js" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#E65100"/>
+      <text x="16" y="21" text-anchor="middle" font-size="14" font-weight="900" font-family="Arial,sans-serif" fill="white">JS</text>
+      <rect x="8" y="24" width="16" height="2" rx="1" fill="white" opacity="0.5"/>
+    </symbol>
+
+    <!-- JazzCash: Red with J -->
+    <symbol id="icon-jazzcash" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#E31837"/>
+      <circle cx="16" cy="14" r="8" fill="white" opacity="0.15"/>
+      <text x="16" y="18" text-anchor="middle" font-size="10" font-weight="900" font-family="Arial,sans-serif" fill="white">Jazz</text>
+      <text x="16" y="26" text-anchor="middle" font-size="6" font-weight="700" font-family="Arial,sans-serif" fill="#FFD700">CASH</text>
+    </symbol>
+
+    <!-- EasyPaisa: Green -->
+    <symbol id="icon-easypaisa" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#4CAF50"/>
+      <circle cx="16" cy="14" r="7" fill="white" opacity="0.2"/>
+      <text x="16" y="17" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="white">Easy</text>
+      <text x="16" y="25" text-anchor="middle" font-size="6" font-weight="700" font-family="Arial,sans-serif" fill="#C8E6C9">PAISA</text>
+    </symbol>
+
+    <!-- NayaPay -->
+    <symbol id="icon-nayapay" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#7B1FA2"/>
+      <text x="16" y="18" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="white">Naya</text>
+      <text x="16" y="25" text-anchor="middle" font-size="6" font-weight="700" font-family="Arial,sans-serif" fill="#E1BEE7">PAY</text>
+    </symbol>
+
+    <!-- SadaPay -->
+    <symbol id="icon-sadapay" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#FF5722"/>
+      <text x="16" y="18" text-anchor="middle" font-size="7" font-weight="900" font-family="Arial,sans-serif" fill="white">Sada</text>
+      <text x="16" y="25" text-anchor="middle" font-size="6" font-weight="700" font-family="Arial,sans-serif" fill="#FFCCBC">PAY</text>
+    </symbol>
+
+    <!-- Generic/Other bank -->
+    <symbol id="icon-other" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#607D8B"/>
+      <path d="M6 14 L16 7 L26 14 Z" fill="white" opacity="0.3"/>
+      <rect x="6" y="14" width="20" height="2" rx="1" fill="white" opacity="0.5"/>
+      <rect x="9" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="14.5" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="20" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="6" y="24" width="20" height="2.5" rx="1" fill="white" opacity="0.4"/>
+    </symbol>
+    <symbol id="icon-other-bank" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#607D8B"/>
+      <path d="M6 14 L16 7 L26 14 Z" fill="white" opacity="0.3"/>
+      <rect x="6" y="14" width="20" height="2" rx="1" fill="white" opacity="0.5"/>
+      <rect x="9" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="14.5" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="20" y="16" width="3" height="8" fill="white" opacity="0.25"/>
+      <rect x="6" y="24" width="20" height="2.5" rx="1" fill="white" opacity="0.4"/>
+    </symbol>
+  </defs>
+</svg>

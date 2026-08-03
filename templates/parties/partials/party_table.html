@@ -1,0 +1,104 @@
+{% load humanize %}
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Code</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">City</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Balance</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for party in parties %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 text-sm font-mono text-gray-600">{{ party.code }}</td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm font-medium text-gray-900">{{ party.name }}</div>
+                        {% if party.company_name %}
+                        <div class="text-xs text-gray-400">{{ party.company_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full
+                            {% if party.party_type == 'supplier' %}bg-blue-100 text-blue-700
+                            {% elif party.party_type == 'customer' %}bg-purple-100 text-purple-700
+                            {% elif party.party_type == 'both' %}bg-indigo-100 text-indigo-700
+                            {% elif party.party_type == 'broker' %}bg-amber-100 text-amber-700
+                            {% elif party.party_type == 'transporter' %}bg-cyan-100 text-cyan-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ party.get_party_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ party.city|default:"-" }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ party.phone_primary|default:"-" }}</td>
+                    <td class="px-4 py-3 text-sm text-right font-medium
+                        {% if party.current_balance > 0 %}text-emerald-600
+                        {% elif party.current_balance < 0 %}text-red-600
+                        {% else %}text-gray-500{% endif %}">
+                        {{ party.balance_display }}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        {% if party.is_active %}
+                        <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">Active</span>
+                        {% else %}
+                        <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center space-x-1">
+                            <a href="{% url 'parties:party_detail' party.pk %}"
+                               class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'parties:party_edit' party.pk %}"
+                               class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </a>
+                            <button hx-post="{% url 'parties:party_delete' party.pk %}"
+                                    onclick="showConfirm('Deactivate Party?', '{{ party.name|escapejs }} will be deactivated.', '{% url "parties:party_delete" party.pk %}', '{{ csrf_token }}', 'Yes, Deactivate'); return false;" type="button"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Deactivate">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-4 py-12 text-center">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <p class="text-gray-500 font-medium">No parties found</p>
+                        <p class="text-gray-400 text-sm mt-1">Add suppliers, customers, and other business contacts.</p>
+                        <a href="{% url 'parties:party_create' %}" class="inline-flex items-center mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Add Party
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if parties %}
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-500">
+        Showing {{ parties|length }} part{{ parties|length|pluralize:"y,ies" }}
+    </div>
+    {% endif %}
+</div>

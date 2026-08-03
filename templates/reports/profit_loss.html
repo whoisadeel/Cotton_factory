@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Profit & Loss{% endblock %}
+{% block page_title %}Profit & Loss — نفع نقصان{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<div style="max-width:700px;margin:0 auto;">
+    <!-- P&L Statement -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-weight:700;color:#374151;">
+            Profit & Loss Statement — نفع نقصان بیان
+        </div>
+        <div style="padding:20px;">
+            <!-- Revenue -->
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+                <span style="font-size:15px;color:#374151;font-weight:600;">Sales Revenue — فروخت</span>
+                <span style="font-size:15px;font-weight:800;color:#059669;">₨ {{ sales_total|floatformat:0|intcomma }}</span>
+            </div>
+
+            <!-- Cost -->
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+                <span style="font-size:15px;color:#374151;font-weight:600;">Less: Cost of Purchases — خریداری</span>
+                <span style="font-size:15px;font-weight:800;color:#dc2626;">(₨ {{ purchase_total|floatformat:0|intcomma }})</span>
+            </div>
+
+            <!-- Gross Profit -->
+            <div style="display:flex;justify-content:space-between;padding:14px 16px;margin:12px -20px;{% if gross_profit >= 0 %}background:#eff6ff;{% else %}background:#fef2f2;{% endif %}">
+                <span style="font-size:16px;font-weight:800;{% if gross_profit >= 0 %}color:#1e40af;{% else %}color:#991b1b;{% endif %}">Gross Profit — مجموعی نفع</span>
+                <span style="font-size:18px;font-weight:900;{% if gross_profit >= 0 %}color:#1e40af;{% else %}color:#991b1b;{% endif %}">₨ {{ gross_profit|floatformat:0|intcomma }}</span>
+            </div>
+
+            <!-- Expenses -->
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+                <span style="font-size:15px;color:#374151;font-weight:600;">Less: Operating Expenses — اخراجات</span>
+                <span style="font-size:15px;font-weight:800;color:#dc2626;">(₨ {{ expenses_total|floatformat:0|intcomma }})</span>
+            </div>
+
+            <!-- Expense Breakdown -->
+            {% for e in expense_breakdown %}
+            <div style="display:flex;justify-content:space-between;padding:6px 0 6px 24px;">
+                <span style="font-size:13px;color:#6b7280;">{{ e.category }}</span>
+                <span style="font-size:13px;color:#6b7280;">₨ {{ e.total|floatformat:0|intcomma }}</span>
+            </div>
+            {% endfor %}
+
+            <!-- Net Profit -->
+            <div style="display:flex;justify-content:space-between;padding:16px;margin:16px -20px -20px;border-radius:0 0 16px 16px;{% if net_profit >= 0 %}background:linear-gradient(135deg,#059669,#10b981);{% else %}background:linear-gradient(135deg,#dc2626,#ef4444);{% endif %}">
+                <span style="font-size:18px;font-weight:900;color:white;">{% if net_profit >= 0 %}Net Profit — خالص نفع{% else %}Net Loss — خالص نقصان{% endif %}</span>
+                <span style="font-size:22px;font-weight:900;color:white;">₨ {{ net_profit|floatformat:0|intcomma }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Margin -->
+    {% if sales_total > 0 %}
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Gross Margin — مجموعی مارجن</div>
+            <div style="font-size:22px;font-weight:800;{% if gross_profit >= 0 %}color:#2563eb;{% else %}color:#dc2626;{% endif %}">
+                {% widthratio gross_profit sales_total 100 %}%
+            </div>
+        </div>
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:11px;color:#6b7280;">Net Margin — خالص مارجن</div>
+            <div style="font-size:22px;font-weight:800;{% if net_profit >= 0 %}color:#059669;{% else %}color:#dc2626;{% endif %}">
+                {% widthratio net_profit sales_total 100 %}%
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

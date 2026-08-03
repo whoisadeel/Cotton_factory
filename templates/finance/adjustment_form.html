@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto;width:100%;box-sizing:border-box;">
+
+    <!-- Breadcrumb -->
+    <div style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+        <a href="{{ back_url }}" style="color:#7c3aed;text-decoration:none;">← Back</a>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:14px;margin-bottom:16px;">
+        {% for error in form.non_field_errors %}
+        <div style="color:#dc2626;font-size:13px;font-weight:600;">⚠️ {{ error }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- How it Works -->
+        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:16px;padding:20px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="font-size:24px;">🔄</span>
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#5b21b6;">Cross-Party Adjustment — کراس پارٹی ایڈجسٹمنٹ</div>
+                    <div style="font-size:12px;color:#7c3aed;">One party pays another directly — no cash through you</div>
+                </div>
+            </div>
+            <div style="font-size:13px;color:#6d28d9;line-height:1.8;padding-top:10px;border-top:1px solid #ddd6fe;">
+                <strong>Example — مثال:</strong><br>
+                Customer "Ali" owes you ₨50,000. You owe Supplier "Ahmed" ₨50,000.<br>
+                You tell Ali to pay Ahmed directly. Both balances adjust — no cash moves through you.<br>
+                <span style="font-size:12px;color:#8b5cf6;">علی کے ذمے آپ کے ₨50,000 ہیں۔ آپ کے ذمے احمد کے ₨50,000 ہیں۔ آپ نے کہا علی سیدھا احمد کو دے دو۔</span>
+            </div>
+        </div>
+
+        <!-- Date -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">
+                Date — تاریخ
+            </label>
+            {{ form.date }}
+            {% if form.date.errors %}<div style="color:#dc2626;font-size:12px;margin-top:4px;">{{ form.date.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Parties — the core -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end;">
+                <!-- Who Pays -->
+                <div>
+                    <label style="font-size:13px;font-weight:700;color:#dc2626;display:block;margin-bottom:6px;">
+                        💸 Who Pays — کون ادا کرے گا
+                    </label>
+                    <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">This party's balance will DECREASE — ان کا بیلنس کم ہوگا</div>
+                    {{ form.from_party }}
+                    {% if form.from_party.errors %}<div style="color:#dc2626;font-size:12px;margin-top:4px;">{{ form.from_party.errors.0 }}</div>{% endif %}
+                </div>
+
+                <!-- Arrow -->
+                <div style="text-align:center;padding-bottom:24px;">
+                    <div style="font-size:32px;color:#7c3aed;">→</div>
+                    <div style="font-size:10px;color:#7c3aed;font-weight:600;">pays — ادائیگی</div>
+                </div>
+
+                <!-- Who Gets Paid -->
+                <div>
+                    <label style="font-size:13px;font-weight:700;color:#059669;display:block;margin-bottom:6px;">
+                        💰 Who Gets Paid — کسے ادائیگی ہوگی
+                    </label>
+                    <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">This party's balance will INCREASE — ان کا بیلنس بڑھے گا</div>
+                    {{ form.to_party }}
+                    {% if form.to_party.errors %}<div style="color:#dc2626;font-size:12px;margin-top:4px;">{{ form.to_party.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Live Preview of what will happen -->
+            <div id="balance-preview" style="display:none;margin-top:16px;background:#f8fafc;border-radius:12px;padding:14px;border:1px solid #e5e7eb;">
+                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;">📊 What will happen — کیا ہوگا:</div>
+                <div id="preview-content" style="font-size:13px;line-height:1.8;color:#475569;"></div>
+            </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">
+                Payment Method — طریقہ
+            </label>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">How was this payment actually made? — ادائیگی کیسے کی گئی؟</div>
+            {{ form.payment_method }}
+        </div>
+
+        <!-- Amount -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;text-align:center;">
+                Amount — رقم
+            </label>
+            <div style="max-width:320px;margin:0 auto;">
+                {{ form.amount }}
+            </div>
+            {% if form.amount.errors %}<div style="color:#dc2626;font-size:12px;margin-top:4px;text-align:center;">{{ form.amount.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Narration -->
+        <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;">
+                Description — تفصیل <span style="color:#9ca3af;font-weight:400;">(optional)</span>
+            </label>
+            {{ form.narration }}
+            {% if form.narration.errors %}<div style="color:#dc2626;font-size:12px;margin-top:4px;">{{ form.narration.errors.0 }}</div>{% endif %}
+        </div>
+
+        <!-- Payable toggle -->
+        <div style="background:white;border:2px solid #ddd6fe;border-radius:16px;padding:20px;margin-bottom:16px;">
+            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+                {{ form.we_owe_them }}
+                <div>
+                    <span style="font-size:15px;font-weight:700;color:#5b21b6;">This is a Payable — واجب الادا ہے</span>
+                    <div style="font-size:13px;color:#7c3aed;margin-top:4px;line-height:1.6;">
+                        ✓ <strong>Checked (default)</strong>: Settling a payable — their balance will adjust.<br>
+                        <span style="color:#8b5cf6;">واجب الادا کی ادائیگی — بیلنس ایڈجسٹ ہوگا۔</span><br><br>
+                        ✗ <strong>Unchecked</strong>: Not a payable — service or one-time payment. Balance will NOT change.<br>
+                        <span style="color:#8b5cf6;">واجب الادا نہیں — خدمت یا ایک بار کی ادائیگی۔ بیلنس نہیں بدلے گا۔</span>
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Submit -->
+        <div style="display:flex;gap:12px;margin-top:20px;">
+            <button type="submit" style="flex:1;padding:16px;background:#7c3aed;color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {% if submit_label %}{{ submit_label }} — {{ submit_label_ur }}{% else %}Save Adjustment — ایڈجسٹمنٹ محفوظ کریں{% endif %}
+            </button>
+            <a href="{{ back_url }}" style="padding:16px 24px;background:white;color:#6b7280;border:2px solid #e5e7eb;border-radius:14px;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Live preview: show what will happen to each party's balance
+(function(){
+    var fromSel = document.querySelector('[name="from_party"]');
+    var toSel = document.querySelector('[name="to_party"]');
+    var amtInput = document.querySelector('[name="amount"]');
+    var preview = document.getElementById('balance-preview');
+    var content = document.getElementById('preview-content');
+    
+    function getSelectedText(sel) {
+        return sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+    }
+    
+    function update() {
+        var fromText = getSelectedText(fromSel);
+        var toText = getSelectedText(toSel);
+        var amt = amtInput.value;
+        
+        if (fromSel.value && toSel.value && amt && parseFloat(amt) > 0) {
+            preview.style.display = 'block';
+            var a = parseFloat(amt).toLocaleString();
+            content.innerHTML = 
+                '🔴 <strong>' + fromText.split(' — ')[0] + '</strong> pays ₨' + a + ' → balance <strong>decreases</strong> by ₨' + a + '<br>' +
+                '🟢 <strong>' + toText.split(' — ')[0] + '</strong> gets paid ₨' + a + ' → balance <strong>increases</strong> by ₨' + a;
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+    
+    if(fromSel) fromSel.addEventListener('change', update);
+    if(toSel) toSel.addEventListener('change', update);
+    if(amtInput) amtInput.addEventListener('input', update);
+    update();
+})();
+</script>
+{% endblock %}

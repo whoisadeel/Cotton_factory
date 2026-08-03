@@ -1,0 +1,160 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Accounts Overview{% endblock %}
+{% block page_title %}Accounts Overview — مکمل حساب کتاب{% endblock %}
+{% block content %}
+<div style="margin-bottom:12px;"><a href="/reports/" style="font-size:13px;color:#059669;text-decoration:none;font-weight:600;">← Reports — رپورٹس</a></div>
+{% include "components/date_filter.html" %}
+
+<!-- Grand Summary -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#c2410c;font-weight:600;">Purchases — خریداری</div>
+            <div style="font-size:18px;font-weight:800;color:#ea580c;">₨ {{ total_purchases|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#1e40af;font-weight:600;">Sales — فروخت</div>
+            <div style="font-size:18px;font-weight:800;color:#2563eb;">₨ {{ total_sales|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#991b1b;font-weight:600;">Paid Out — ادائیگی</div>
+            <div style="font-size:18px;font-weight:800;color:#dc2626;">₨ {{ total_paid_out|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#166534;font-weight:600;">Received — وصولی</div>
+            <div style="font-size:18px;font-weight:800;color:#059669;">₨ {{ total_received_in|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#166534;font-weight:600;">Receivables — وصولیاں</div>
+            <div style="font-size:18px;font-weight:900;color:#059669;">₨ {{ total_receivable|floatformat:0|intcomma }}</div>
+        </div>
+        <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:10px;color:#991b1b;font-weight:600;">Payables — واجبات</div>
+            <div style="font-size:18px;font-weight:900;color:#dc2626;">₨ {{ total_payable|floatformat:0|intcomma }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ COMPLETE PARTY-WISE ACCOUNTS ═══ -->
+<div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:14px 20px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-weight:700;color:#374151;display:flex;justify-content:space-between;align-items:center;">
+        <span>📊 Party-wise Accounts — پارٹی وار حساب ({{ parties_data|length }})</span>
+        <a href="{% url 'settings_app:data_export' %}?type=parties" style="padding:4px 12px;background:#dcfce7;color:#166534;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;">Export CSV</a>
+    </div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #e5e7eb;">
+                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Party — پارٹی</th>
+                <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;">Type</th>
+                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#ea580c;">Purchases</th>
+                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#2563eb;">Sales</th>
+                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#dc2626;">Paid Out</th>
+                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#059669;">Received In</th>
+                <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;color:#374151;">Balance — بیلنس</th>
+                <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in parties_data %}
+            <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/reports/party-ledger/{{ d.party.pk }}/?from={{ filter_from|date:'Y-m-d' }}&to={{ filter_to|date:'Y-m-d' }}'">
+                <td style="padding:8px 14px;font-weight:700;">{{ d.party.name }}</td>
+                <td style="padding:8px 14px;">
+                    <span style="padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;
+                        {% if d.party.party_type == 'supplier' %}background:#dbeafe;color:#1e40af;
+                        {% elif d.party.party_type == 'customer' %}background:#f3e8ff;color:#6b21a8;
+                        {% else %}background:#f3f4f6;color:#374151;{% endif %}">
+                        {{ d.party.get_party_type_display }}</span>
+                </td>
+                <td style="padding:8px 14px;text-align:right;{% if d.purchases %}color:#ea580c;{% else %}color:#d1d5db;{% endif %}">
+                    {% if d.purchases %}₨ {{ d.purchases|floatformat:0|intcomma }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:8px 14px;text-align:right;{% if d.sales %}color:#2563eb;{% else %}color:#d1d5db;{% endif %}">
+                    {% if d.sales %}₨ {{ d.sales|floatformat:0|intcomma }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:8px 14px;text-align:right;{% if d.paid %}color:#dc2626;{% else %}color:#d1d5db;{% endif %}">
+                    {% if d.paid %}₨ {{ d.paid|floatformat:0|intcomma }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:8px 14px;text-align:right;{% if d.received %}color:#059669;{% else %}color:#d1d5db;{% endif %}">
+                    {% if d.received %}₨ {{ d.received|floatformat:0|intcomma }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:8px 14px;text-align:right;font-weight:800;
+                    {% if d.balance > 0 %}color:#059669;{% elif d.balance < 0 %}color:#dc2626;{% else %}color:#6b7280;{% endif %}">
+                    ₨ {{ d.balance|floatformat:0|intcomma }}
+                </td>
+                <td style="padding:8px 14px;text-align:center;">
+                    {% if d.balance > 0 %}<span style="padding:2px 8px;background:#dcfce7;color:#166534;border-radius:8px;font-size:10px;font-weight:600;">Receivable</span>
+                    {% elif d.balance < 0 %}<span style="padding:2px 8px;background:#fef2f2;color:#991b1b;border-radius:8px;font-size:10px;font-weight:600;">Payable</span>
+                    {% else %}<span style="padding:2px 8px;background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:10px;font-weight:600;">Clear</span>{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="padding:30px;text-align:center;color:#9ca3af;">No party accounts — کوئی حساب نہیں</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if parties_data %}
+        <tfoot style="background:#f8fafc;border-top:2px solid #e5e7eb;">
+            <tr style="font-weight:800;font-size:14px;">
+                <td style="padding:12px 14px;" colspan="2">TOTALS — کل</td>
+                <td style="padding:12px 14px;text-align:right;color:#ea580c;">₨ {{ total_purchases|floatformat:0|intcomma }}</td>
+                <td style="padding:12px 14px;text-align:right;color:#2563eb;">₨ {{ total_sales|floatformat:0|intcomma }}</td>
+                <td style="padding:12px 14px;text-align:right;color:#dc2626;">₨ {{ total_paid_out|floatformat:0|intcomma }}</td>
+                <td style="padding:12px 14px;text-align:right;color:#059669;">₨ {{ total_received_in|floatformat:0|intcomma }}</td>
+                <td style="padding:12px 14px;text-align:right;"></td>
+                <td style="padding:12px 14px;"></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+    </div>
+</div>
+
+<!-- Recent Payments & Receipts side by side -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <!-- Recent Payments -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:12px 16px;background:#fef2f2;border-bottom:1px solid #fecaca;font-weight:700;color:#991b1b;font-size:14px;">
+            💸 Recent Payments — حالیہ ادائیگیاں
+        </div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+            <tbody>
+            {% for p in recent_payments %}
+            <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/payments/{{ p.pk }}/'">
+                <td style="padding:6px 12px;font-size:11px;color:#6b7280;">{{ p.date|date:"d/m" }}</td>
+                <td style="padding:6px 12px;font-weight:600;">{{ p.party.name }}</td>
+                <td style="padding:6px 12px;font-size:11px;color:#6b7280;">{{ p.get_payment_method_display }}</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:700;color:#dc2626;">₨ {{ p.amount|floatformat:0|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:#9ca3af;">No payments</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Receipts -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:12px 16px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;font-weight:700;color:#166534;font-size:14px;">
+            💰 Recent Receipts — حالیہ وصولیاں
+        </div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+            <tbody>
+            {% for r in recent_receipts %}
+            <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="window.location='/finance/receipts/{{ r.pk }}/'">
+                <td style="padding:6px 12px;font-size:11px;color:#6b7280;">{{ r.date|date:"d/m" }}</td>
+                <td style="padding:6px 12px;font-weight:600;">{{ r.party.name }}</td>
+                <td style="padding:6px 12px;font-size:11px;color:#6b7280;">{{ r.get_payment_method_display }}</td>
+                <td style="padding:6px 12px;text-align:right;font-weight:700;color:#059669;">₨ {{ r.amount|floatformat:0|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:#9ca3af;">No receipts</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

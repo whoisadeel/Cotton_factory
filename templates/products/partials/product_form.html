@@ -1,0 +1,15 @@
+{# HTMX partial — just the form content, no base template #}
+{% if form.errors %}
+<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+    <h3 class="font-bold text-red-800 text-sm mb-1">Please fix errors — براہ کرم غلطیاں درست کریں</h3>
+    <ul class="space-y-0.5">
+    {% for field_name, errors in form.errors.items %}
+        <li class="text-sm text-red-700">
+            <strong>{{ field_name }}:</strong>
+            {% for e in errors %}{{ e }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<p class="text-sm text-gray-500">Use the full page to add/edit products.</p>

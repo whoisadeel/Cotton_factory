@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Stock — اسٹاک{% endblock %}
+{% block page_title %}Stock Overview — اسٹاک{% endblock %}
+{% block content %}
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <a href="{% url 'inventory:stock_movements' %}" class="px-4 py-2 text-sm bg-white border border-gray-300 rounded-xl hover:bg-gray-50">Stock Movements — حرکات</a>
+    </div>
+    
+    <!-- Search -->
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:12px 16px;margin-bottom:16px;">
+        <input type="text" id="stock-search" placeholder="Search products — پروڈکٹ تلاش کریں..."
+               oninput="var q=this.value.toLowerCase();document.querySelectorAll('.stock-card').forEach(function(c){c.style.display=c.textContent.toLowerCase().includes(q)?'':'none';})"
+               style="width:100%;padding:10px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;outline:none;"
+               onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e5e7eb'">
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for p in products %}
+        <div class="stock-card bg-white rounded-2xl border border-gray-200 p-5 {% if p.is_low_stock %}border-red-200 bg-red-50/30{% endif %}">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h4 class="font-bold text-gray-900">{{ p.name }}</h4>
+                    <p class="text-xs text-gray-400">{{ p.category.name }} · {{ p.code }}</p>
+                </div>
+                {% if p.is_low_stock %}
+                <span class="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full animate-pulse">Low!</span>
+                {% endif %}
+            </div>
+            <div class="mt-3">
+                <p class="text-3xl font-bold {% if p.is_low_stock %}text-red-600{% else %}text-gray-900{% endif %}">
+                    {{ p.current_stock|floatformat:2 }}
+                </p>
+                <p class="text-sm text-gray-500">{{ p.unit.name }} ({{ p.unit.abbreviation }})</p>
+            </div>
+            <div class="mt-2 flex justify-between text-xs text-gray-400">
+                <span>Min: {{ p.minimum_stock|floatformat:0 }}</span>
+                <span>Value: ₨ {{ p.stock_value|floatformat:0|intcomma }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-gray-400">
+            <p class="font-medium">No products yet</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
